@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub仓库展示</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'HarmonyOS Sans SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+        }
+        .card {
+            width: 600px;
+            height: 400px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            border-radius: 18px;
+            position: relative;
+            color: white;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 30px;
+            margin: 0 0 15px 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+        }
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding-right: 120px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-right: 120px;
+        }
+        .stat-box {
+            background-color: rgba(255,255,255,0.2);
+            padding: 12px 15px;
+            border-radius: 14px;
+            text-align: center;
+            width: 28%;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            margin: 0 2%;
+        }
+        .stat-box:first-child {
+            margin-left: 0;
+        }
+        .stat-box:last-child {
+            margin-right: 0;
+        }
+        .stat-title {
+            font-size: 13px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            padding-right: 120px;
+        }
+        .tech-tag {
+            background-color: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+        .last-activity {
+            font-size: 14px;
+            margin-top: 15px;
+            padding-right: 120px;
+            letter-spacing: 0.3px;
+        }
+        .qrcode-container {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            text-align: center;
+        }
+        .qrcode {
+            width: 110px;
+            height: 110px;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .qrcode img {
+            width: 100%;
+            height: 100%;
+        }
+        .qrcode-label {
+            font-size: 12px;
+            margin-top: 8px;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer-date {
+            font-size: 13px;
+            opacity: 0.8;
+            letter-spacing: 0.3px;
+        }
+        .github-link {
+            font-size: 14px;
+        }
+        .github-link a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.3px;
+        }
+        .github-icon {
+            margin-right: 6px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1>拔河比赛管理系统（Tug of War Host）</h1>
+        </div>
+        
+        <div class="description">
+            一个用于管理校园拔河比赛的轻量级 PHP Web 应用，支持班级维护、比赛安排、检录与结果展示。此仓库已经完成目录重构并支持 Docker 一键部署。
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-title">代码行数</div>
+                <div class="stat-value">3835</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">提交次数</div>
+                <div class="stat-value">6</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">主要语言</div>
+                <div class="stat-value">PHP</div>
+            </div>
+        </div>
+        
+        <div class="tech-stack">
+            <span class="tech-tag">PHP</span>
+            <span class="tech-tag">MySQL</span>
+            <span class="tech-tag">Docker</span>
+        </div>
+        
+        <div class="last-activity">
+            最近更新: 2025-10-14T17:48:39+08:00 · 主要语言: PHP
+        </div>
+        
+        <div class="qrcode-container">
+            <div class="qrcode">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://github.com/Gentle-Lijie/tugofwar-host" alt="仓库二维码">
+            </div>
+            <div class="qrcode-label">扫码访问仓库</div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-date">更新于: 2025-10-14T17:48:39+08:00</div>
+            <div class="github-link">
+                <a href="https://github.com/Gentle-Lijie/tugofwar-host">
+                    <span class="github-icon">&#xf09b;</span>Gentle-Lijie/tugofwar-host
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
