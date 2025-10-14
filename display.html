@@ -15,12 +15,13 @@
         .card {
             width: 600px;
             height: 400px;
-            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            /* 新的配色：松石绿到深青渐变 */
+            background: linear-gradient(135deg, #2ac6b6 0%, #136b6d 100%);
             border-radius: 18px;
             position: relative;
-            color: white;
+            color: #ffffff;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 12px 30px rgba(19,107,109,0.25);
             padding: 30px;
             box-sizing: border-box;
         }
@@ -48,13 +49,15 @@
             padding-right: 120px;
         }
         .stat-box {
-            background-color: rgba(255,255,255,0.2);
+            /* 使用淡珊瑚色的半透明背景以提供暖色对比 */
+            background-color: rgba(255,127,80,0.12); /* coral, 12% */
             padding: 12px 15px;
             border-radius: 14px;
             text-align: center;
             width: 28%;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             margin: 0 2%;
+            border: 1px solid rgba(255,127,80,0.18);
         }
         .stat-box:first-child {
             margin-left: 0;
@@ -65,13 +68,15 @@
         .stat-title {
             font-size: 13px;
             margin-bottom: 8px;
-            opacity: 0.9;
+            opacity: 0.95;
             letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.9);
         }
         .stat-value {
             font-size: 22px;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
+            color: #ffffff;
         }
         .tech-stack {
             display: flex;
@@ -80,13 +85,16 @@
             padding-right: 120px;
         }
         .tech-tag {
-            background-color: rgba(255,255,255,0.2);
+            /* 珊瑚色标签，半透明背景 */
+            background-color: rgba(255,127,80,0.12);
+            color: #fff;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 14px;
             margin-right: 10px;
             margin-bottom: 10px;
             letter-spacing: 0.3px;
+            border: 1px solid rgba(255,127,80,0.18);
         }
         .last-activity {
             font-size: 14px;
@@ -106,7 +114,7 @@
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 16px rgba(19,107,109,0.18);
         }
         .qrcode img {
             width: 100%;
@@ -151,7 +159,7 @@
 <body>
     <div class="card">
         <div class="header">
-            <h1>拔河比赛管理系统（Tug of War Host）</h1>
+            <h1>拔河比赛管理系统</h1>
         </div>
         
         <div class="description">
@@ -179,9 +187,9 @@
             <span class="tech-tag">Docker</span>
         </div>
         
-        <div class="last-activity">
+        <!-- <div class="last-activity">
             最近更新: 2025-10-14T17:48:39+08:00 · 主要语言: PHP
-        </div>
+        </div> -->
         
         <div class="qrcode-container">
             <div class="qrcode">
