@@ -1,8 +1,7 @@
 <?php
-include 'db.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
-// 获取所有班级
-$query_classes = "SELECT * FROM `classes`";
+$query_classes = 'SELECT * FROM `classes`';
 $result_classes = mysqli_query($db, $query_classes);
 ?>
 
@@ -12,11 +11,10 @@ $result_classes = mysqli_query($db, $query_classes);
     <meta charset="UTF-8">
     <title>管理员页面</title>
     <style>
-        /* 全局样式 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #FAF6EF; /* Portland Stone */
-            color: #10263B; /* Nottingham Blue */
+            background-color: #FAF6EF;
+            color: #10263B;
             margin: 0;
             padding: 0;
             line-height: 1.6;
@@ -30,7 +28,6 @@ $result_classes = mysqli_query($db, $query_classes);
             margin-left: 20px;
         }
 
-        /* 管理比赛 */
         .form-container {
             background-color: #ffffff;
             padding: 15px;
@@ -47,7 +44,7 @@ $result_classes = mysqli_query($db, $query_classes);
         .form-container label {
             font-size: 1rem;
             font-weight: 600;
-            color: #405162; /* 80% Nottingham Blue */
+            color: #405162;
             margin-right: 10px;
         }
 
@@ -60,7 +57,7 @@ $result_classes = mysqli_query($db, $query_classes);
         }
 
         .form-container button {
-            background-color: #10263B; /* Nottingham Blue */
+            background-color: #10263B;
             color: white;
             padding: 10px 20px;
             font-size: 1rem;
@@ -72,10 +69,9 @@ $result_classes = mysqli_query($db, $query_classes);
         }
 
         .form-container button:hover {
-            background-color: #405162; /* 80% Nottingham Blue */
+            background-color: #405162;
         }
 
-        /* 比赛列表样式 */
         table {
             width: 90%;
             margin: 20px auto;
@@ -93,16 +89,16 @@ $result_classes = mysqli_query($db, $query_classes);
         }
 
         th {
-            background-color: #10263B; /* Nottingham Blue */
+            background-color: #10263B;
             color: white;
         }
 
         tr:nth-child(even) {
-            background-color: #9FA8B1; /* 40% Nottingham Blue */
+            background-color: #9FA8B1;
         }
 
         tr:hover {
-            background-color: #CFD4D8; /* 20% Nottingham Blue */
+            background-color: #CFD4D8;
         }
 
         td input, td select {
@@ -115,23 +111,21 @@ $result_classes = mysqli_query($db, $query_classes);
         }
 
         td button {
-            background-color: #405162; /* 80% Nottingham Blue */
+            background-color: #405162;
             color:white;
             border-radius: 6px;
             padding: 8px 14px;
         }
 
         td button:hover {
-            background-color: #10263B; /* Nottingham Blue */
+            background-color: #10263B;
         }
 
-        /* 高亮未结束的比赛 */
         .highlight {
-            background-color: #33AFCD; /* 80% Malaysia Sky Blue */
+            background-color: #33AFCD;
             color: white;
         }
 
-        /* 状态按钮 */
         .status-btn {
             display: inline-block;
             padding: 6px 12px;
@@ -146,8 +140,8 @@ $result_classes = mysqli_query($db, $query_classes);
         }
 
         .status-btn.active {
-            background-color: #33AFCD; /* 蓝底 */
-            color: #000; /* 黑字 */
+            background-color: #33AFCD;
+            color: #000;
         }
 
         .status-btn:hover {
@@ -173,87 +167,76 @@ $result_classes = mysqli_query($db, $query_classes);
         </form>
     </div>
 
-    <!-- 比赛列表 -->
-<h3>比赛列表(高亮为待开始比赛)</h3>
+    <h3>比赛列表(高亮为待开始比赛)</h3>
 
-<!-- 新增容器包裹表格 -->
-<div class="table-container">
-    <table>
-        <tr>
-            <th>班级 A</th>
-            <th>班级 B</th>
-            <th>开始时间</th>
-            <th>结果</th>
-            <th>操作</th>
-        </tr>
-
-        <?php 
-        $query_matches = "SELECT * FROM `matches` ORDER BY `start_time` ASC";
-        $result_matches = mysqli_query($db, $query_matches);
-
-        while ($match = mysqli_fetch_assoc($result_matches)): 
-            $class_a_query = "SELECT class_name FROM `classes` WHERE `id` = {$match['class_a']}";
-            $class_a_result = mysqli_query($db, $class_a_query);
-            $class_a = mysqli_fetch_assoc($class_a_result);
-
-            $class_b_query = "SELECT class_name FROM `classes` WHERE `id` = {$match['class_b']}";
-            $class_b_result = mysqli_query($db, $class_b_query);
-            $class_b = mysqli_fetch_assoc($class_b_result);
-        ?>
-        
-        <form action="update_match.php" method="POST">
-            <tr class="<?= $match['result'] == '未结束'||date('Y-m-d H:i:s')<$match['start_time'] ? 'highlight' : '' ?>">
-                <td>
-                    <input type="hidden" name="match_id" value="<?= $match['id'] ?>">
-                    <input type="text" name="class_a" value="<?= $class_a['class_name'] ?>" required>
-                </td>
-                <td>
-                    <input type="text" name="class_b" value="<?= $class_b['class_name'] ?>" required>
-                </td>
-                <td>
-                    <input type="datetime-local" name="start_time" value="<?= $match['start_time'] ?>" required>
-                </td>
-                <td>
-                    <?php 
-                    $statuses = ['未结束', 'A胜利', 'B胜利'];
-                    foreach ($statuses as $s): 
-                        $checked = ($match['result'] == $s) ? 'checked' : '';
-                    ?>
-                        <label class="status-btn <?= $checked ? 'active' : '' ?>">
-                            <input type="radio" name="result" value="<?= $s ?>" <?= $checked ?> hidden>
-                            <?= $s ?>
-                        </label>
-                    <?php endforeach; ?>
-                </td>
-                <td>
-                    <button type="submit">更新</button>
-                </td>
+    <div class="table-container">
+        <table>
+            <tr>
+                <th>班级 A</th>
+                <th>班级 B</th>
+                <th>开始时间</th>
+                <th>结果</th>
+                <th>操作</th>
             </tr>
-        </form>
 
-        <?php endwhile; ?>
-    </table>
-</div>
+            <?php 
+            $query_matches = 'SELECT * FROM `matches` ORDER BY `start_time` ASC';
+            $result_matches = mysqli_query($db, $query_matches);
 
-<style>
-    /* 表格滚动容器 */
-    .table-container {
-        max-height: 60vh; /* 根据需要调整高度 */
-        overflow-y: auto;
-        margin: 20px auto;
-        width: 90%;
-    }
+            while ($match = mysqli_fetch_assoc($result_matches)): 
+                $class_a_query = "SELECT class_name FROM `classes` WHERE `id` = {$match['class_a']}";
+                $class_a_result = mysqli_query($db, $class_a_query);
+                $class_a = mysqli_fetch_assoc($class_a_result);
 
-    /* 避免表格被圆角裁剪 */
-    .table-container table {
-        border-radius: 8px;
-    }
-</style>
-
-    <!-- 回首页按钮 -->
-    <a href="index.html" class="back-to-home">回首页</a>
+                $class_b_query = "SELECT class_name FROM `classes` WHERE `id` = {$match['class_b']}";
+                $class_b_result = mysqli_query($db, $class_b_query);
+                $class_b = mysqli_fetch_assoc($class_b_result);
+            ?>
+            <form action="update_match.php" method="POST">
+                <tr class="<?= $match['result'] === '未结束' || date('Y-m-d H:i:s') < $match['start_time'] ? 'highlight' : '' ?>">
+                    <td>
+                        <input type="hidden" name="match_id" value="<?= $match['id'] ?>">
+                        <input type="text" name="class_a" value="<?= htmlspecialchars($class_a['class_name']) ?>" required>
+                    </td>
+                    <td>
+                        <input type="text" name="class_b" value="<?= htmlspecialchars($class_b['class_name']) ?>" required>
+                    </td>
+                    <td>
+                        <input type="datetime-local" name="start_time" value="<?= $match['start_time'] ?>" required>
+                    </td>
+                    <td>
+                        <?php 
+                        $statuses = ['未结束', 'A胜利', 'B胜利'];
+                        foreach ($statuses as $s): 
+                            $checked = ($match['result'] === $s) ? 'checked' : '';
+                        ?>
+                            <label class="status-btn <?= $checked ? 'active' : '' ?>">
+                                <input type="radio" name="result" value="<?= $s ?>" <?= $checked ?> hidden>
+                                <?= $s ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </td>
+                    <td>
+                        <button type="submit">更新</button>
+                    </td>
+                </tr>
+            </form>
+            <?php endwhile; ?>
+        </table>
+    </div>
 
     <style>
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin: 20px auto;
+            width: 90%;
+        }
+
+        .table-container table {
+            border-radius: 8px;
+        }
+
         .back-to-home {
             z-index: 999;
             position: fixed;
@@ -280,38 +263,34 @@ $result_classes = mysqli_query($db, $query_classes);
         }
     </style>
 
+    <a href="index.php" class="back-to-home">回首页</a>
+
     <footer style="position:fixed; left:0; bottom:0; width:100%; background:#fff; border-top:1px solid #e0e6ed; box-shadow:0 -2px 8px rgba(52,152,219,0.08); padding:12px 0; color:#666; font-size:1em; text-align:center; z-index:99;">
         For tech support: Contact Lijie ZHOU (20809020 <a href="mailto:scylz12@nottingham.edu.cn" style="color:#2980b9;text-decoration:none;">scylz12@nottingham.edu.cn</a>)
     </footer>
 
     <script>
-document.querySelectorAll('.status-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const matchRow = btn.closest('tr');
-        const matchId = matchRow.querySelector('input[name="match_id"]').value;
-        const status = btn.innerText;
+    document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const matchRow = btn.closest('tr');
+            const matchId = matchRow.querySelector('input[name="match_id"]').value;
+            const status = btn.innerText;
 
-        // 取消同组按钮的 active
-        matchRow.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+            matchRow.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-        // 激活当前按钮
-        btn.classList.add('active');
-
-        // AJAX 实时更新数据库
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'update_result.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                console.log('更新成功：', xhr.responseText);
-            } else {
-                alert('更新失败');
-            }
-        };
-        xhr.send('match_id=' + encodeURIComponent(matchId) + '&result=' + encodeURIComponent(status));
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'update_result.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status !== 200) {
+                    alert('更新失败');
+                }
+            };
+            xhr.send('match_id=' + encodeURIComponent(matchId) + '&result=' + encodeURIComponent(status));
+        });
     });
-});
-</script>
+    </script>
 
 </body>
 </html>

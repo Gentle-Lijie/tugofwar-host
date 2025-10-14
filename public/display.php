@@ -1,8 +1,7 @@
 <?php
-include 'db.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
-// 获取所有比赛
-$query = "SELECT * FROM `matches` ORDER BY `start_time` ASC";
+$query = 'SELECT * FROM `matches` ORDER BY `start_time` ASC';
 $result = mysqli_query($db, $query);
 
 $matches = [];
@@ -10,26 +9,31 @@ while ($row = mysqli_fetch_assoc($result)) {
     $matches[] = $row;
 }
 
-// 获取班级名的辅助函数
 function getClassName($class_id) {
     global $db;
-    $query = "SELECT `class_name` FROM `classes` WHERE `id` = $class_id";
-    $result = mysqli_query($db, $query);
-    $class = mysqli_fetch_assoc($result);
-    return $class['class_name'] ?? '未知班级';
-}
-function getWinnerColor($class_id) {
-    if ($class_id >= 1 && $class_id <= 10) {           // 商学院
-        return '#9be3a4'; // Malaysia Sky Blue
-    } elseif ($class_id >= 11 && $class_id <= 23) {   // 人文
-        return '#ea5632'; // Nottingham Blue
-    } elseif ($class_id >= 24 && $class_id <= 40) {   // 理工
-        return '#e9d26a'; // 40% Nottingham Blue
-    } else {                                           // 测试用户
-        return 'blue'; // 红色
+    $stmt = mysqli_prepare($db, 'SELECT `class_name` FROM `classes` WHERE `id` = ?');
+    if (!$stmt) {
+        return '未知班级';
     }
+    mysqli_stmt_bind_param($stmt, 'i', $class_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $class_name);
+    $result = mysqli_stmt_fetch($stmt) ? $class_name : '未知班级';
+    mysqli_stmt_close($stmt);
+    return $result ?: '未知班级';
 }
-// 先确定每场比赛的状态
+
+function getWinnerColor($class_id) {
+    if ($class_id >= 1 && $class_id <= 10) {
+        return '#9be3a4';
+    } elseif ($class_id >= 11 && $class_id <= 23) {
+        return '#ea5632';
+    } elseif ($class_id >= 24 && $class_id <= 40) {
+        return '#e9d26a';
+    }
+    return 'blue';
+}
+
 $prev_result = true;
 $match_statuses = [];
 foreach ($matches as $index => $match) {
@@ -46,7 +50,6 @@ foreach ($matches as $index => $match) {
     $match_statuses[$index] = $status;
 }
 
-// 找出下一场需要检录的比赛（高亮下方的一场）
 $next_match = null;
 foreach ($match_statuses as $i => $status) {
     if ($status === 'in-progress' && isset($matches[$i+1])) {
@@ -139,7 +142,6 @@ body {
 
 .match-list {
     width: 80%;
-    /* max-width: 800px; */
     flex: 1;
     overflow-y: auto;
     padding: 20px;
@@ -233,7 +235,7 @@ body {
     <div class="page-title">比赛大屏</div>
     <?php if ($next_match): ?>
     <div class="next-match-box">
-        <?= getClassName($next_match['class_a']) ?> 和 <?= getClassName($next_match['class_b']) ?> 请前往检录台
+        <?= htmlspecialchars(getClassName($next_match['class_a'])) ?> 和 <?= htmlspecialchars(getClassName($next_match['class_b'])) ?> 请前往检录台
     </div>
     <?php endif; ?>
 </div>
@@ -248,26 +250,24 @@ foreach ($matches as $i => $match):
 
     $winner_a = ($status === 'completed' && strpos($match['result'], 'A胜利') !== false);
     $winner_b = ($status === 'completed' && strpos($match['result'], 'B胜利') !== false);
-    // echo $winner_a.' | '.$winner_b;
-    // 胜利班级名字替换
-    if ($winner_a) $class_a_name = ' 🎉 '.getClassName($match['class_a']);
-    if ($winner_b) $class_b_name = ' 🎉 '.getClassName($match['class_b']);
+    if ($winner_a) $class_a_name = ' 🎉 ' . $class_a_name;
+    if ($winner_b) $class_b_name = ' 🎉 ' . $class_b_name;
 ?>
 <div class="match <?= $status==='in-progress'?'highlight':($status==='pending'?'pending':'completed'); ?>">
     <div class="team" <?= $winner_a ? 'style="background-color:'.getWinnerColor($match['class_a']).';color:white;"' : '' ?>>
-    <?= $class_a_name ?>
+    <?= htmlspecialchars($class_a_name) ?>
 </div>
 
 
     <div class="time">
-        <?= date('H:i', strtotime($match['start_time'])) ?> <!-- 预计时间 -->
+        <?= htmlspecialchars(date('H:i', strtotime($match['start_time']))) ?>
         <div class="status <?= $status==='completed'?'completed':'' ?>">
 <?php
 if ($status === 'completed') {
     if ($winner_a) {
-        echo getClassName($match['class_a']) . '胜利';
+        echo htmlspecialchars(getClassName($match['class_a'])) . '胜利';
     } elseif ($winner_b) {
-        echo getClassName($match['class_b']) . '胜利';
+        echo htmlspecialchars(getClassName($match['class_b'])) . '胜利';
     } else {
         echo '';
     }
@@ -281,12 +281,12 @@ if ($status === 'completed') {
         </div>
     </div>
 <div class="team" <?= $winner_b ? 'style="background-color:'.getWinnerColor($match['class_b']).';color:white;"' : '' ?>>
-    <?= $class_b_name ?>
+    <?= htmlspecialchars($class_b_name) ?>
 </div></div>
 <?php endforeach; ?>
 </div>
 
-<a href="index.html" class="back-to-home">回首页</a>
+<a href="index.php" class="back-to-home">回首页</a>
 <footer style="position:fixed; left:0; bottom:0; width:100%; background:#fff; border-top:1px solid #e0e6ed; box-shadow:0 -2px 8px rgba(52,152,219,0.08); padding:12px 0; color:#666; font-size:1em; text-align:center; z-index:99;">
     For tech support: Contact Lijie ZHOU (20809020 <a href="mailto:scylz12@nottingham.edu.cn" style="color:#2980b9;text-decoration:none;">scylz12@nottingham.edu.cn</a>)
 </footer>

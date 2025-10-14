@@ -1,0 +1,9 @@
+.git
+.gitignore
+storage/backups/*
+node_modules
+vendor
+.idea
+.vscode
+.DS_Store
+.env

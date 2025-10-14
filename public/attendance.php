@@ -1,7 +1,6 @@
 <?php
-include 'db.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
-// 获取所有比赛（按时间排序）
 $matches_result = mysqli_query($db, "SELECT m.*, c1.class_name AS class_a_name, c2.class_name AS class_b_name
                                      FROM `matches` m
                                      JOIN `classes` c1 ON m.class_a = c1.id
@@ -12,7 +11,6 @@ while ($row = mysqli_fetch_assoc($matches_result)) {
     $matches[] = $row;
 }
 
-// 当前比赛 ID
 $current_match_id = $_GET['match_id'] ?? ($matches[0]['id'] ?? null);
 
 $current_match_index = 0;
@@ -25,11 +23,9 @@ foreach ($matches as $i => $m) {
     }
 }
 
-// 找上一场/下一场
 $prev_match = $current_match_index > 0 ? $matches[$current_match_index - 1] : null;
 $next_match = $current_match_index < count($matches) - 1 ? $matches[$current_match_index + 1] : null;
 
-// 准备学生数据和签到信息
 $attendance_data = [];
 if ($current_match) {
     $query_a = "SELECT * FROM `students` WHERE `class_id` = {$current_match['class_a']}";
@@ -75,26 +71,26 @@ if ($current_match) {
         <label for="match_id">比赛：</label>
         <select name="match_id" id="match_id" onchange="this.form.submit()">
             <?php foreach ($matches as $m): ?>
-                <option value="<?= $m['id'] ?>" <?= $m['id']==$current_match_id?'selected':'' ?>>
-                    <?= $m['class_a_name'] ?> VS <?= $m['class_b_name'] ?>
+                <option value="<?= (int)$m['id'] ?>" <?= $m['id']==$current_match_id?'selected':'' ?>>
+                    <?= htmlspecialchars($m['class_a_name']) ?> VS <?= htmlspecialchars($m['class_b_name']) ?>
                 </option>
             <?php endforeach; ?>
         </select>
     </form>
 
     <?php if ($current_match): ?>
-        <h3>检录：<?= $current_match['class_a_name'] ?> VS <?= $current_match['class_b_name'] ?></h3>
+        <h3>检录：<?= htmlspecialchars($current_match['class_a_name']) ?> VS <?= htmlspecialchars($current_match['class_b_name']) ?></h3>
         <table>
             <tr>
-                <th class="class-column"><?= $current_match['class_a_name'] ?> 学生</th>
-                <th class="class-column"><?= $current_match['class_b_name'] ?> 学生</th>
+                <th class="class-column"><?= htmlspecialchars($current_match['class_a_name']) ?> 学生</th>
+                <th class="class-column"><?= htmlspecialchars($current_match['class_b_name']) ?> 学生</th>
             </tr>
             <tr>
                 <td>
                     <table>
                         <?php while ($student = mysqli_fetch_assoc($result_a)): ?>
-                            <tr class="student-row" data-id="<?= $student['id'] ?>">
-                                <td><?= $student['name'] ?></td>
+                            <tr class="student-row" data-id="<?= (int)$student['id'] ?>">
+                                <td><?= htmlspecialchars($student['name']) ?></td>
                                 <td class="status" data-status="<?= $attendance_data[$student['id']] ?? 0 ?>">
                                     <span class="<?= ($attendance_data[$student['id']] ?? 0) ? 'checked-in' : 'not-checked-in' ?>">
                                         <?= ($attendance_data[$student['id']] ?? 0) ? '已签到' : '未签到' ?>
@@ -107,8 +103,8 @@ if ($current_match) {
                 <td>
                     <table>
                         <?php while ($student = mysqli_fetch_assoc($result_b)): ?>
-                            <tr class="student-row" data-id="<?= $student['id'] ?>">
-                                <td><?= $student['name'] ?></td>
+                            <tr class="student-row" data-id="<?= (int)$student['id'] ?>">
+                                <td><?= htmlspecialchars($student['name']) ?></td>
                                 <td class="status" data-status="<?= $attendance_data[$student['id']] ?? 0 ?>">
                                     <span class="<?= ($attendance_data[$student['id']] ?? 0) ? 'checked-in' : 'not-checked-in' ?>">
                                         <?= ($attendance_data[$student['id']] ?? 0) ? '已签到' : '未签到' ?>
@@ -124,13 +120,13 @@ if ($current_match) {
         <div style="text-align:center;">
             <?php if ($prev_match): ?>
                 <form method="GET" style="display:inline-block;">
-                    <input type="hidden" name="match_id" value="<?= $prev_match['id'] ?>">
+                    <input type="hidden" name="match_id" value="<?= (int)$prev_match['id'] ?>">
                     <button type="submit" class="nav-button">上一场比赛</button>
                 </form>
             <?php endif; ?>
             <?php if ($next_match): ?>
                 <form method="GET" style="display:inline-block;">
-                    <input type="hidden" name="match_id" value="<?= $next_match['id'] ?>">
+                    <input type="hidden" name="match_id" value="<?= (int)$next_match['id'] ?>">
                     <button type="submit" class="nav-button">下一场比赛</button>
                 </form>
             <?php endif; ?>
@@ -157,14 +153,14 @@ if ($current_match) {
                 }
                 fetch('update_attendance.php', {
                     method: 'POST',
-                    body: JSON.stringify({ match_id: <?= $current_match_id ?>, student_id: studentId, checked_in: newStatus }),
+                    body: JSON.stringify({ match_id: <?= (int)$current_match_id ?>, student_id: studentId, checked_in: newStatus }),
                     headers: { 'Content-Type': 'application/json' }
-                }).catch(error => console.log(error));
+                }).catch(error => console.error(error));
             });
         });
     </script>
 
-    <a href="index.html" class="back-to-home">回首页</a>
+    <a href="index.php" class="back-to-home">回首页</a>
 
     <footer style="position:fixed; left:0; bottom:0; width:100%; background:#fff; border-top:1px solid #e0e6ed; box-shadow:0 -2px 8px rgba(52,152,219,0.08); padding:12px 0; color:#666; font-size:1em; text-align:center; z-index:999;">
         For tech support: Lijie ZHOU (20809020 <a href="mailto:scylz12@nottingham.edu.cn" style="color:#2980b9;">scylz12@nottingham.edu.cn</a>)

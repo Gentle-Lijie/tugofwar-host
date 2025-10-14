@@ -1,0 +1,74 @@
+body {
+    background: #f4f6f8;
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(52, 152, 219, 0.08);
+    padding: 40px 24px;
+    max-width: 520px;
+    width: 90%;
+    margin: 60px auto;
+    text-align: center;
+}
+
+h1 {
+    color: #2980b9;
+    font-size: 2.2em;
+    margin-bottom: 32px;
+}
+
+.entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.entry-btn {
+    display: block;
+    width: 100%;
+    padding: 18px 0;
+    background: #3498db;
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.12);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.entry-btn:hover {
+    background: #2980b9;
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.18);
+    transform: translateY(-1px);
+}
+
+.footer {
+    margin-top: auto;
+    background: #fff;
+    border-top: 1px solid #e0e6ed;
+    box-shadow: 0 -2px 8px rgba(52, 152, 219, 0.08);
+    padding: 12px 0;
+    color: #666;
+    font-size: 1em;
+    text-align: center;
+}
+
+.footer a {
+    color: #2980b9;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
