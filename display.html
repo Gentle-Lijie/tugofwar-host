@@ -15,8 +15,8 @@
         .card {
             width: 600px;
             height: 400px;
-            /* 新配色：珊瑚到暖橙渐变，主体强调色为 coral (#FF7F50) */
-            background: linear-gradient(135deg, #ff7f50 0%, #ff5a36 100%);
+            /* 更深的底色：深珊瑚到深橙渐变 */
+            background: linear-gradient(135deg, #e85b3b 0%, #b33a20 100%);
             border-radius: 18px;
             position: relative;
             color: #ffffff;
@@ -41,6 +41,11 @@
             padding-right: 120px;
             font-weight: 400;
             letter-spacing: 0.5px;
+        }
+        /* 限制左侧主内容宽度，避免与右侧二维码重合 */
+        .content-left {
+            max-width: calc(100% - 40px);
+            box-sizing: border-box;
         }
         .stats-container {
             display: flex;
@@ -109,18 +114,25 @@
             text-align: center;
         }
         .qrcode {
-            width: 110px;
-            height: 110px;
-            /* 透明底，使用阴影增强可见性 */
-            background-color: transparent;
-            border-radius: 10px;
+            /* 白底、圆角，并留出内边距使二维码不紧贴边缘 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 134px; /* 外框总宽（含内边距） */
+            height: 134px; /* 外框总高 */
+            background-color: #ffffff; /* 白底 */
+            border-radius: 14px; /* 圆角 */
+            padding: 12px; /* 内边距，确保白边比二维码大 */
+            box-sizing: border-box;
             overflow: hidden;
             box-shadow: 0 6px 18px rgba(0,0,0,0.14);
         }
-        .qrcode svg { width:100%; height:100%; display:block; }
         .qrcode img {
-            width: 100%;
-            height: 100%;
+            width: 110px; /* 二维码实际大小 */
+            height: 110px;
+            display: block;
+            background-color: transparent;
+            border-radius: 4px;
         }
         .qrcode-label {
             font-size: 12px;
@@ -167,11 +179,12 @@
             <h1>拔河比赛管理系统</h1>
         </div>
         
-        <div class="description">
-            一个用于管理校园拔河比赛的轻量级 PHP Web 应用，支持班级维护、比赛安排、检录与结果展示。此仓库已经完成目录重构并支持 Docker 一键部署。
-        </div>
-        
-        <div class="stats-container">
+        <div class="content-left">
+            <div class="description">
+                一个用于管理校园拔河比赛的轻量级 PHP Web 应用，支持班级维护、比赛安排、检录与结果展示。此仓库已经完成目录重构并支持 Docker 一键部署。
+            </div>
+            
+            <div class="stats-container">
             <div class="stat-box">
                 <div class="stat-title">代码行数</div>
                 <div class="stat-value">3835</div>
@@ -186,10 +199,11 @@
             </div>
         </div>
         
-        <div class="tech-stack">
+            <div class="tech-stack">
             <span class="tech-tag">PHP</span>
             <span class="tech-tag">MySQL</span>
             <span class="tech-tag">Docker</span>
+        </div>
         </div>
         
         <!-- <div class="last-activity">
@@ -198,21 +212,8 @@
         
         <div class="qrcode-container">
             <div class="qrcode">
-                <!-- 内联 SVG 二维码，透明背景，模块使用强调色 coral (#FF7F50) -->
-                <svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QRCode">
-                    <rect width="110" height="110" fill="transparent"/>
-                    <!-- 简化示例：用几何图形模拟二维码样式（真正的二维码应使用生成工具生成 SVG 路径） -->
-                    <g fill="#FF7F50">
-                        <rect x="8" y="8" width="28" height="28" rx="3" />
-                        <rect x="74" y="8" width="28" height="28" rx="3" />
-                        <rect x="8" y="74" width="28" height="28" rx="3" />
-                        <!-- 中心点与若干方块模拟 -->
-                        <rect x="44" y="44" width="6" height="6" />
-                        <rect x="56" y="44" width="6" height="6" />
-                        <rect x="44" y="56" width="6" height="6" />
-                        <rect x="56" y="56" width="6" height="6" />
-                    </g>
-                </svg>
+                <!-- 使用 api.qrserver.com 生成透明背景 SVG 二维码以便可扫描 -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&format=png&data=https://github.com/Gentle-Lijie/tugofwar-host&color=000000&bgcolor=ffffff" alt="仓库二维码">
             </div>
             <div class="qrcode-label">扫码访问仓库</div>
         </div>
