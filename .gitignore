@@ -1,0 +1,50 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# PHP / Composer
+/vendor/
+/composer.lock
+
+# Environment
+.env
+.env.*
+
+# Docker
+docker-compose.override.yml
+**/.dockerignore
+**/.env
+
+# Node
+node_modules/
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Logs and databases
+*.log
+*.sql
+storage/backups/*
+
+# Build outputs
+dist/
+build/
+
+# Images or large files that shouldn't be tracked
+public/assets/images/*.psd
+public/assets/images/*.ai
+
+# Ignore local database files
+*.sqlite
+
+# Ignore system-specific files
+*.swp
+*~
+
+# Ignore generated files from editors
+*.iml
+
+# Keep README/LICENSE visible (do not ignore)
