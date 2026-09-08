@@ -83,10 +83,15 @@ onUnmounted(() => clearInterval(timer));
       <img :src="qrDataUrl" alt="二维码" />
       <div class="qr-text">扫码访问</div>
     </div>
+    <div class="qr-code right">
+      <div class="qr-placeholder">二维码<br />待配置</div>
+      <div class="qr-text">图片直播</div>
+    </div>
 
     <!-- 头部 -->
     <div class="header">
-      <div class="page-title">Wonderful US 2026 拔河比赛<span v-if="state.currentStage" class="stage-name"> · {{ state.currentStage.name }}</span></div>
+      <div class="page-title">Wonderful US 2026 拔河比赛</div>
+      <div class="stage-name" v-if="state.currentStage">{{ state.currentStage.name }}</div>
       <div class="announcement" v-if="state.announcement">{{ state.announcement }}</div>
       <div class="next-match-box" v-if="showCalling">
         {{ callingMatch.teamAName }} 和 {{ callingMatch.teamBName }} 请前往检录台
@@ -142,7 +147,21 @@ onUnmounted(() => clearInterval(timer));
   text-align: center;
 }
 .qr-code.left { left: 20px; }
+.qr-code.right { right: 20px; }
 .qr-code img { width: 100%; height: auto; display: block; }
+.qr-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed #b7c0c9;
+  border-radius: 8px;
+  color: #9fa8b1;
+  font-size: 2vh;
+  text-align: center;
+  line-height: 1.6;
+}
 .qr-text { font-size: 2vh; color: #10263b; }
 
 /* 头部 */
@@ -158,7 +177,12 @@ onUnmounted(() => clearInterval(timer));
   margin-bottom: 8px;
   color: #10263b;
 }
-.stage-name { font-size: 3.5vh; font-weight: normal; color: #707d89; }
+.stage-name {
+  font-size: 4vh;
+  font-weight: bold;
+  color: #2980b9;
+  margin-bottom: 8px;
+}
 .announcement {
   font-size: 2.4vh;
   color: #2980b9;
