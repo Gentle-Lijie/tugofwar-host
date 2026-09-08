@@ -76,6 +76,22 @@ router.get(
       )
       .all(...(currentStageId ? [currentStageId] : []));
 
+    // 大屏列表：当前赛段（未设置则全部）的完整比赛列表
+    const matches = db
+      .prepare(
+        `SELECT m.id, m.sort, m.start_time AS startTime, m.winner_side AS winnerSide,
+          s.id AS stageId, s.name AS stageName,
+          a.id AS teamAId, a.name AS teamAName, a.color AS teamAColor,
+          b.id AS teamBId, b.name AS teamBName, b.color AS teamBColor
+        FROM matches m
+        JOIN stages s ON s.id = m.stage_id
+        JOIN teams a ON a.id = m.team_a_id
+        JOIN teams b ON b.id = m.team_b_id
+        WHERE 1=1 ${stageFilter}
+        ORDER BY s.sort, m.sort, m.id`
+      )
+      .all(...(currentStageId ? [currentStageId] : []));
+
     res.json({
       generatedAt: new Date().toISOString(),
       currentStage,
@@ -84,6 +100,7 @@ router.get(
       announcement: getState('announcement') || '',
       upcoming,
       recentResults,
+      matches,
     });
   })
 );

@@ -71,22 +71,20 @@ watch(() => route.path, loadStages);
   align-items: center;
   gap: 24px;
   background: #fff;
-  border-bottom: 1px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-bottom: 1px solid #e0e6ed;
+  box-shadow: 0 -2px 8px rgba(52, 152, 219, 0.08), 0 2px 8px rgba(52, 152, 219, 0.08);
   padding: 0 24px;
   height: 54px;
   position: sticky;
   top: 0;
   z-index: 10;
 }
-.brand { font-weight: 700; font-size: 16px; color: var(--text); }
-nav { display: flex; gap: 4px; flex: 1; }
-nav a {
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: var(--muted);
-}
-nav a:hover { background: #f1f5f9; color: var(--text); }
-nav a.router-link-active { color: var(--primary); background: #eff6ff; }
+.brand { font-weight: bold; font-size: 17px; color: #2980b9; }
+nav { display: flex; gap: 18px; flex: 1; }
+nav a { color: var(--text); font-weight: 500; }
+nav a:hover { color: #2980b9; text-decoration: underline; }
+nav a.router-link-active { color: #2980b9; font-weight: bold; }
 .stage-switch { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 </style>

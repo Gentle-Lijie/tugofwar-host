@@ -1,12 +1,15 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
+// 旧版 PHP attendance.php 风格：双栏表格、已签到(青)/未签到(红)、上一场/下一场
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api.js';
 
 const route = useRoute();
-const matchId = route.params.id;
+const router = useRouter();
+const matchId = Number(route.params.id);
 
 const data = ref(null);
+const allMatches = ref([]);
 const toast = ref(null);
 let timer = null;
 let inFlight = false;
@@ -26,6 +29,28 @@ async function load() {
   } finally {
     inFlight = false;
   }
+}
+
+async function loadNeighbors() {
+  try {
+    allMatches.value = await api.get('/matches');
+  } catch {
+    /* 导航按钮退化为不可用 */
+  }
+}
+
+const neighbors = computed(() => {
+  const idx = allMatches.value.findIndex((m) => m.id === matchId);
+  if (idx === -1) return {};
+  return {
+    prev: allMatches.value[idx - 1] || null,
+    next: allMatches.value[idx + 1] || null,
+  };
+});
+
+function goto(m) {
+  if (!m) return;
+  router.push(`/matches/${m.id}/checkin`);
 }
 
 async function toggle(team, p) {
@@ -53,7 +78,7 @@ async function resetAll() {
 
 async function setCalling() {
   try {
-    await api.put('/display/current', { matchId: Number(matchId), calling: true });
+    await api.put('/display/current', { matchId, calling: true });
     showToast('已在大屏叫号');
   } catch (e) {
     showToast(e.message, true);
@@ -62,6 +87,7 @@ async function setCalling() {
 
 onMounted(() => {
   load();
+  loadNeighbors();
   timer = setInterval(load, 5000); // 多检录员屏幕同步
 });
 onUnmounted(() => clearInterval(timer));
@@ -69,76 +95,95 @@ onUnmounted(() => clearInterval(timer));
 
 <template>
   <template v-if="data">
-    <div class="row" style="justify-content: space-between; margin-bottom: 16px">
-      <h1 class="page-title" style="margin: 0">
-        检录 · {{ data.match.stageName }} 第 {{ data.match.sort }} 场
-        <span class="muted" style="font-size: 14px; font-weight: 400">
-          {{ data.match.startTime || '' }}
-        </span>
-      </h1>
-      <div class="row">
-        <button @click="setCalling">📢 大屏叫号</button>
-        <button class="danger" @click="resetAll">全部重置</button>
-      </div>
+    <h1 class="page-title" style="text-align: center">
+      检录：{{ data.match.teamAName }} VS {{ data.match.teamBName }}
+      <span class="muted" style="font-size: 15px; font-weight: normal">
+        {{ data.match.stageName }} 第 {{ data.match.sort }} 场{{ data.match.startTime ? ' · ' + data.match.startTime : '' }}
+      </span>
+    </h1>
+
+    <div class="row" style="justify-content: center; margin-bottom: 16px">
+      <button @click="setCalling">📢 大屏叫号</button>
+      <button class="danger" @click="resetAll">全部重置</button>
     </div>
 
-    <div class="two-col">
-      <div class="card team" v-for="team in [data.teamA, data.teamB]" :key="team.id">
-        <div class="row" style="justify-content: space-between; margin-bottom: 12px">
-          <b style="font-size: 17px">{{ team.name }}</b>
-          <div class="progress" :class="{ full: team.present === team.total && team.total > 0 }">
-            到场 {{ team.present }}/{{ team.total }}
-            <div class="bar">
-              <div class="fill" :style="{ width: team.total ? (team.present / team.total) * 100 + '%' : '0%' }"></div>
-            </div>
-          </div>
-        </div>
-        <div class="players">
-          <div
-            v-for="p in team.players"
-            :key="p.playerId"
-            class="player"
-            :class="{ present: !!p.present }"
-            @click="toggle(team, p)"
-          >
-            <span class="mark">{{ p.present ? '●' : '○' }}</span>
-            <span class="pname">{{ p.name }}</span>
-            <span class="pno muted">{{ p.studentNo }}</span>
-          </div>
-          <p v-if="!team.players.length" class="muted">该队伍暂无队员名单</p>
-        </div>
-      </div>
+    <table class="checkin-table">
+      <tr>
+        <th class="class-column">
+          {{ data.match.teamAName }} 学生
+          <span class="count">到场 {{ data.teamA.present }}/{{ data.teamA.total }}</span>
+        </th>
+        <th class="class-column">
+          {{ data.match.teamBName }} 学生
+          <span class="count">到场 {{ data.teamB.present }}/{{ data.teamB.total }}</span>
+        </th>
+      </tr>
+      <tr>
+        <td v-for="team in [data.teamA, data.teamB]" :key="team.id" class="class-cell">
+          <table class="inner">
+            <tr
+              v-for="p in team.players"
+              :key="p.playerId"
+              class="student-row"
+              @click="toggle(team, p)"
+            >
+              <td class="sname">{{ p.name }}</td>
+              <td class="sno">{{ p.studentNo }}</td>
+              <td class="status" :class="p.present ? 'checked-in' : 'not-checked-in'">
+                {{ p.present ? '已签到' : '未签到' }}
+              </td>
+            </tr>
+          </table>
+          <p v-if="!team.players.length" class="muted" style="text-align: center">该队伍暂无队员名单</p>
+        </td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; margin: 20px 0">
+      <button v-if="neighbors.prev" class="subtle" @click="goto(neighbors.prev)">
+        上一场（{{ neighbors.prev.teamAName }} VS {{ neighbors.prev.teamBName }}）
+      </button>
+      <button v-if="neighbors.next" class="subtle" @click="goto(neighbors.next)">
+        下一场（{{ neighbors.next.teamAName }} VS {{ neighbors.next.teamBName }}）
+      </button>
     </div>
-    <p class="muted" style="text-align: center">点击学生行切换 到场 / 未到场</p>
+    <p class="muted" style="text-align: center">点击学生行切换 已签到 / 未签到</p>
   </template>
   <div v-else class="card">加载中…</div>
   <div v-if="toast" class="toast" :class="{ error: toast.isError }">{{ toast.msg }}</div>
 </template>
 
 <style scoped>
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
-.progress { min-width: 180px; font-size: 14px; font-weight: 600; }
-.progress.full { color: var(--success); }
-.bar { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 4px; overflow: hidden; }
-.fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.2s; }
-.progress.full .fill { background: var(--success); }
-.players { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
-.player {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
+.checkin-table {
+  width: 90%;
+  max-width: 1100px;
+  margin: 0 auto 10px;
+  border-collapse: collapse;
+}
+.checkin-table > tr > th,
+.checkin-table > tr > td {
+  border: 1px solid #cfd4d8;
+  padding: 0;
+  vertical-align: top;
+  width: 50%;
   background: #fff;
 }
-.player:hover { border-color: var(--primary); }
-.player.present { background: #f0fdf4; border-color: #86efac; }
-.mark { color: var(--muted); }
-.player.present .mark { color: var(--success); }
-.pname { font-weight: 500; flex: 1; }
-.pno { font-size: 12px; }
+.class-column {
+  background: #10263b;
+  color: #fff;
+  padding: 10px;
+  font-size: 17px;
+  text-align: center;
+}
+.class-column .count { font-size: 14px; font-weight: normal; margin-left: 10px; color: #99d7e6; }
+.class-cell { padding: 6px; }
+.inner { width: 100%; border-collapse: collapse; }
+.inner td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+.student-row { cursor: pointer; }
+.student-row:hover { background: #f0f4f8; }
+.sname { font-weight: bold; }
+.sno { color: #707d89; font-size: 13px; }
+.status { font-weight: bold; text-align: center; width: 90px; }
+.checked-in { color: #33afcd; }
+.not-checked-in { color: #e74c3c; }
 </style>
