@@ -52,3 +52,4 @@ public/assets/images/*.ai
 # v2: SQLite data
 server/data/
 .playwright-mcp/
+server.log
