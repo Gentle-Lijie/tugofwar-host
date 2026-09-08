@@ -101,12 +101,6 @@ const columns = [
   { title: '班级A', key: 'teamA', render: (m) => teamCell(m, 'a') },
   { title: '班级B', key: 'teamB', render: (m) => teamCell(m, 'b') },
   {
-    title: '时间',
-    key: 'startTime',
-    width: 90,
-    render: (m) => h('span', { class: 'muted' }, m.startTime || '—'),
-  },
-  {
     title: '结果',
     key: 'result',
     width: 80,
@@ -146,7 +140,7 @@ const columns = [
 
 function openAdd() {
   const defaultStage = currentStageId.value !== '__all__' ? currentStageId.value : stages.value[0]?.id ?? null;
-  newMatch.value = { stageId: defaultStage, teamAId: null, teamBId: null, startTime: '', sort: '' };
+  newMatch.value = { stageId: defaultStage, teamAId: null, teamBId: null, sort: '' };
   adding.value = true;
 }
 
@@ -158,7 +152,6 @@ async function addMatch() {
       stageId: m.stageId,
       teamAId: m.teamAId,
       teamBId: m.teamBId,
-      startTime: m.startTime || null,
       ...(m.sort ? { sort: Number(m.sort) } : {}),
     });
     adding.value = false;
@@ -175,7 +168,6 @@ async function saveEdit() {
       stageId: e.stageId,
       teamAId: e.teamAId,
       teamBId: e.teamBId,
-      startTime: e.startTime || null,
       sort: Number(e.sort),
     });
     editing.value = null;
@@ -303,8 +295,6 @@ async function deleteStage(s) {
         <n-select v-model:value="newMatch.teamAId" :options="teamOptions" filterable /></div>
       <div class="field"><span>班级 B</span>
         <n-select v-model:value="newMatch.teamBId" :options="teamOptions" filterable /></div>
-      <div class="field"><span>时间</span>
-        <n-input v-model:value="newMatch.startTime" placeholder="如 09:30" /></div>
       <div class="field"><span>场次</span>
         <n-input v-model:value="newMatch.sort" placeholder="可空，自动排到最后" /></div>
     </div>
@@ -324,8 +314,6 @@ async function deleteStage(s) {
         <n-select v-model:value="editing.teamAId" :options="teamOptions" filterable /></div>
       <div class="field"><span>班级 B</span>
         <n-select v-model:value="editing.teamBId" :options="teamOptions" filterable /></div>
-      <div class="field"><span>时间</span>
-        <n-input v-model:value="editing.startTime" /></div>
       <div class="field"><span>场次</span>
         <n-input v-model:value="editing.sort" /></div>
     </div>

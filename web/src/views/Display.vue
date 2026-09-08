@@ -140,7 +140,7 @@ onUnmounted(() => clearInterval(timer));
           {{ m.winnerSide === 0 ? '🎉 ' : '' }}{{ m.teamAName }}
         </div>
         <div class="time">
-          {{ m.startTime || `第${m.sort}场` }}
+          第{{ m.sort }}场
           <div class="status" :class="statusOf(m)">{{ statusText(m) }}</div>
         </div>
         <div class="team" :class="{ winner: m.winnerSide === 1 }">

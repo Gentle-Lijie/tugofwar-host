@@ -193,11 +193,10 @@ export async function buildScheduleTemplate() {
   ws.columns = [
     { header: '班级A', key: 'a', width: 18 },
     { header: '班级B', key: 'b', width: 18 },
-    { header: '开始时间', key: 't', width: 12 },
     { header: '赛段', key: 's', width: 16 },
   ];
-  ws.addRow({ a: '高一(1)班', b: '高一(2)班', t: '09:00', s: '循环赛' });
-  ws.addRow({ a: '高一(3)班', b: '高一(4)班', t: '09:10', s: '循环赛' });
+  ws.addRow({ a: '高一(1)班', b: '高一(2)班', s: '循环赛' });
+  ws.addRow({ a: '高一(3)班', b: '高一(4)班', s: '循环赛' });
   ws.getRow(1).font = { bold: true };
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
@@ -215,7 +214,6 @@ export async function buildStageExport(stageName, matches) {
     { header: '场次', key: 'sort', width: 8 },
     { header: '班级A', key: 'teamA', width: 22 },
     { header: '班级B', key: 'teamB', width: 22 },
-    { header: '开始时间', key: 'startTime', width: 18 },
     { header: '胜方（正）', key: 'winner', width: 22 },
     { header: '负方（负）', key: 'loser', width: 22 },
     { header: '状态', key: 'status', width: 10 },
@@ -227,7 +225,6 @@ export async function buildStageExport(stageName, matches) {
       sort: m.sort,
       teamA: m.teamA,
       teamB: m.teamB,
-      startTime: m.startTime ?? '',
       winner: done ? (m.winnerSide === 0 ? m.teamA : m.teamB) : '',
       loser: done ? (m.winnerSide === 0 ? m.teamB : m.teamA) : '',
       status: done ? '已完成' : '未开始',

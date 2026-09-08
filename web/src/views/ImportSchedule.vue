@@ -49,12 +49,6 @@ const columns = [
     render: (r) => h(NInput, { size: 'small', value: r.teamB, disabled: !r.include, 'onUpdate:value': (v) => (r.teamB = v), style: 'width: 130px' }),
   },
   {
-    title: '开始时间',
-    key: 'startTime',
-    width: 110,
-    render: (r) => h(NInput, { size: 'small', value: r.startTime, disabled: !r.include, 'onUpdate:value': (v) => (r.startTime = v), style: 'width: 90px' }),
-  },
-  {
     title: '赛段',
     key: 'stageName',
     width: 130,
@@ -101,7 +95,6 @@ async function commit() {
       rows: rows.value.map((r) => ({
         teamA: r.teamA,
         teamB: r.teamB,
-        startTime: r.startTime,
         stageName: r.stageName || r.defaultStage,
         include: !!r.include,
       })),
@@ -127,7 +120,7 @@ function reset() {
 
   <div class="card" v-if="step === 1">
     <p class="muted">
-      上传 Excel（.xlsx），每行一场比赛：<b>班级A、班级B、开始时间、赛段</b>。
+      上传 Excel（.xlsx），每行一场比赛：<b>班级A、班级B、赛段</b>。
       不存在的班级与赛段会在导入时自动创建。
     </p>
     <div class="row">

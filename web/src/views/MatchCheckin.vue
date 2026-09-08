@@ -105,7 +105,7 @@ onUnmounted(() => clearInterval(timer));
     <h1 class="page-title" style="text-align: center">
       检录：{{ data.match.teamAName }} VS {{ data.match.teamBName }}
       <span class="muted" style="font-size: 15px; font-weight: normal">
-        {{ data.match.stageName }} 第 {{ data.match.sort }} 场{{ data.match.startTime ? ' · ' + data.match.startTime : '' }}
+        {{ data.match.stageName }} 第 {{ data.match.sort }} 场
       </span>
     </h1>
 

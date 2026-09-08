@@ -75,7 +75,6 @@ const columns = [
         : h('span', { style: { color: '#9aa5b1' } },
             m.winnerSide === 0 ? m.teamBName : m.teamAName),
   },
-  { title: '时间', key: 'startTime', width: 100, render: (m) => h('span', { class: 'muted' }, m.startTime || '—') },
   {
     title: '状态',
     key: 'status',

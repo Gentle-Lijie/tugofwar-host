@@ -29,7 +29,7 @@ const teamBWin = computed(() => done.value && props.match.winnerSide === 1);
       </div>
     </div>
     <div class="meta">
-      <span v-if="match.startTime">{{ match.startTime }}</span>
+      <span>第 {{ match.sort }} 场</span>
       <span v-if="match.note" class="muted">{{ match.note }}</span>
     </div>
   </div>
