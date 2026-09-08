@@ -74,7 +74,10 @@ router.get(
     const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.params.id);
     if (!team) throw httpError(404, '队伍不存在');
     res.json(
-      db.prepare('SELECT id, name, student_no AS studentNo FROM players WHERE team_id = ? ORDER BY id').all(team.id)
+      db.prepare(
+        `SELECT id, name, student_no AS studentNo FROM players
+         WHERE team_id = ? ORDER BY LENGTH(student_no), student_no`
+      ).all(team.id)
     );
   })
 );

@@ -23,7 +23,8 @@ function teamCheckin(matchId, teamId) {
         COALESCE(c.present, 0) AS present
        FROM players p
        LEFT JOIN checkins c ON c.player_id = p.id AND c.match_id = ?
-       WHERE p.team_id = ? ORDER BY p.id`
+       WHERE p.team_id = ?
+       ORDER BY LENGTH(p.student_no), p.student_no`
     )
     .all(matchId, teamId);
   const present = players.filter((p) => p.present).length;
