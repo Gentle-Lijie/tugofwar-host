@@ -1,9 +1,11 @@
 .git
 .gitignore
-storage/backups/*
+legacy
 node_modules
-vendor
-.idea
-.vscode
-.DS_Store
+**/node_modules
+web/dist
+server/data
+.playwright-mcp
 .env
+.env.*
+*.md

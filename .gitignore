@@ -48,3 +48,7 @@ public/assets/images/*.ai
 *.iml
 
 # Keep README/LICENSE visible (do not ignore)
+
+# v2: SQLite data
+server/data/
+.playwright-mcp/

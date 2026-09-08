@@ -1,20 +1,20 @@
-FROM php:8.2-apache
+FROM node:22-slim
 
-# 安装 mysqli 扩展
-RUN docker-php-ext-install mysqli \
-    && docker-php-ext-enable mysqli
+WORKDIR /app
 
-# 设置 Apache DocumentRoot 指向 public 目录
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-        /etc/apache2/sites-available/000-default.conf \
-        /etc/apache2/sites-available/default-ssl.conf
+# 先装依赖以利用层缓存
+COPY package.json package-lock.json ./
+COPY server/package.json server/package.json
+COPY web/package.json web/package.json
+RUN npm ci --include=dev
 
-# 复制代码并调整权限
-COPY . /var/www/html
-RUN chown -R www-data:www-data /var/www/html/storage
+# 拷贝源码并构建前端
+COPY server server
+COPY web web
+RUN npm run build
 
-# 启用必要模块
-RUN a2enmod rewrite
+ENV PORT=8080
+ENV TOW_DB_PATH=./server/data/tugofwar.db
+EXPOSE 8080
 
-WORKDIR /var/www/html/public
+CMD ["node", "server/src/index.js"]

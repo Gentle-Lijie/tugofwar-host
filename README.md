@@ -1,181 +1,73 @@
-# 拔河比赛管理系统（Tug of War Host）
+# 拔河比赛管理系统
 
-> 一个用于管理校园拔河比赛的轻量级 Web 应用，支持班级维护、参赛检录、比赛排程与结果展示。项目现已完成目录重构、Docker 化，并准备好对外开源。
+面向校园拔河赛事的现场管理工具：名单/赛程 Excel 导入、检录、胜负（正/负）标记、赛段管理、实时大屏展示与结果导出。无用户系统，开箱即用。
 
-## ✨ 功能亮点
+## 技术栈
 
-- **集中式配置**：所有数据库连接统一由 `config/database.php` 管理，可通过环境变量覆盖。
-- **一体化管理**：管理员可以新增班级、安排比赛、录入结果，检录台实时同步签到状态。
-- **大屏显示**：为赛事现场提供全屏对阵视图和下一场提醒。
-- **RESTful 接口**：关键操作（如更新检录、比赛结果）均采用更安全的预处理语句与 JSON 响应。
-- **Docker 支持**：提供一键启动的 PHP + MySQL 开发环境，内置数据库初始化脚本。
+- **后端**：Node.js + Express + better-sqlite3（单文件 SQLite，零配置）
+- **前端**：Vite + Vue 3，生产环境由后端直接托管
+- **Excel**：exceljs（导入解析 + 结果导出）
 
-## 📦 项目结构
+## 快速开始
 
-```text
-.
-├── Dockerfile                 # PHP-Apache 应用容器镜像
-├── docker-compose.yml         # 编排 PHP 与 MySQL 双服务
-├── .env.example               # 环境变量示例
-├── .dockerignore              # Docker 构建忽略列表
-├── config/
-│   └── database.php           # 数据库连接配置
-├── database/
-│   └── schema/
-│       └── create_database.sql# 数据库初始化脚本
-├── public/                    # Web 入口（DocumentRoot）
-│   ├── index.php              # 系统首页
-│   ├── assets/
-│   │   ├── css/
-│   │   │   ├── main.css       # 首页样式
-│   │   │   └── display.css    # 备用展示样式
-│   │   └── images/qr.png      # 示例二维码占位
-│   ├── *.php                  # 业务页面与接口
-├── storage/
-│   └── backups/back_db.txt    # 数据库备份 / 记录
-├── tools/
-│   └── adminer/index.php      # 内置 Adminer 数据库管理工具
-└── README.md                  # 本文件
-```
-
-> 生产环境建议将 Web 服务器的 DocumentRoot 指向 `public/` 目录，仓库根目录仅保留配置与文档文件，业务代码全部集中在 `public/` 下。
-
-## 🚀 快速开始
-
-### 方式一：使用 Docker（推荐）
-
-1. 复制环境变量模板并按需修改：
-   ```bash
-   cp .env.example .env
-   ```
-2. 构建并启动服务（需 Docker 及 Docker Compose）：
-   ```bash
-   docker compose up --build
-   ```
-3. 打开浏览器访问 [http://localhost:8080](http://localhost:8080)。
-
-镜像会自动加载 `database/schema/create_database.sql` 并初始化 MySQL 数据库。应用代码通过挂载当前目录，改动可即时生效。
-
-### 方式二：本地手动部署
-
-1. 安装 PHP ≥ 8.1 与 MySQL ≥ 8.0。
-2. 导入 `database/schema/create_database.sql` 初始化数据库。
-3. 配置 Web 服务器（Nginx/Apache）DocumentRoot 指向 `public/`。
-4. 设置环境变量（或在系统中导出）：
-   ```bash
-   export DB_HOST=localhost
-   export DB_USER=your_user
-   export DB_PASSWORD=your_password
-   export DB_NAME=rope
-   ```
-5. 浏览器访问部署地址即可。
-
-如需快速预览，可在项目根目录执行 PHP 内建服务器（仅用于开发）：
 ```bash
-php -S 0.0.0.0:8080 -t public/
+npm install
+npm run dev        # 同时启动 API(:8080) 与前端开发服务(:5173)
 ```
 
-## ⚙️ 环境变量
+生产模式：
 
-| 变量名     | 默认值   | 说明                         |
-|------------|----------|------------------------------|
-| `DB_HOST`  | `mysql`  | 数据库主机（Docker 中为 `mysql` 服务） |
-| `DB_USER`  | `root`   | 数据库用户名                 |
-| `DB_PASSWORD` | 空字符串 | 数据库密码（Docker 默认见 `.env.example`） |
-| `DB_NAME`  | `rope`   | 数据库名称                   |
-
-## 🗄️ 数据库概览
-
-| 表名         | 说明                     |
-|--------------|--------------------------|
-| `classes`    | 参赛班级信息             |
-| `students`   | 班级学生名单             |
-| `matches`    | 比赛安排（对阵、时间、结果） |
-| `attendance` | 检录记录（学生出勤状态） |
-
-首次运行 Docker Compose 时，这些表会自动创建。可通过 `tools/adminer` 访问内置 Adminer（默认端口 8080 下的 `/tools/adminer/index.php`）。
-
-## 🤝 贡献指南
-
-1. Fork 本仓库并创建特性分支：`git checkout -b feature/your-feature`。
-2. 提交前请确保 PHP 语法通过：`find public -name "*.php" -exec php -l {} \;`。
-3. 提交 Pull Request 时请附上变更说明与测试截图/描述。
-4. 欢迎提交 Issue 反馈漏洞、提出新功能或改进建议。
-
-## 🛡️ 许可协议
-
-本项目采用 [MIT License](LICENSE)。欢迎在遵守许可的前提下自由使用、修改与发布。
-
----
-
-# Tug of War Host (English Version)
-
-> A lightweight PHP web application for managing school tug-of-war tournaments. The project now features a cleaner layout, Docker support, and is ready for open-source collaboration.
-
-## ✨ Highlights
-
-- **Central configuration** with `config/database.php` and environment overrides.
-- **All-in-one management** for classes, match scheduling, attendance, and result submission.
-- **Large screen display** tailored for on-site presentation with live match status.
-- **Safer endpoints** thanks to prepared statements and JSON responses for key updates.
-- **Dockerized stack** delivering a one-command PHP + MySQL environment with auto seeding.
-
-## 📂 Structure
-
-Refer to the tree above for folder descriptions. The `public/` directory serves as the web root, while the repository root keeps only configuration and documentation assets.
-
-## 🚀 Quick Start
-
-### Option A: Docker (recommended)
-
-1. Copy the sample env file and adjust values:
-   ```bash
-   cp .env.example .env
-   ```
-2. Build and launch the stack:
-   ```bash
-   docker compose up --build
-   ```
-3. Open [http://localhost:8080](http://localhost:8080) in your browser.
-
-The MySQL service loads `database/schema/create_database.sql` on first run. Source code changes are reflected instantly thanks to the bind mount.
-
-### Option B: Manual setup
-
-1. Install PHP 8.1+ and MySQL 8.0+.
-2. Import `database/schema/create_database.sql` into your database server.
-3. Point your web server's document root to the `public/` directory.
-4. Export the necessary environment variables or configure them in your runtime.
-5. Visit the site via your chosen domain/port.
-
-For quick prototyping you can rely on PHP's built-in server:
 ```bash
-php -S 0.0.0.0:8080 -t public/
+npm run build      # 构建前端到 web/dist
+npm start          # 单端口 :8080 托管 API + 前端
 ```
 
-## ⚙️ Environment Variables
+Docker：
 
-| Variable       | Default  | Description                          |
-|----------------|----------|--------------------------------------|
-| `DB_HOST`      | `mysql`  | Database host (service name in Docker) |
-| `DB_USER`      | `root`   | Database user                         |
-| `DB_PASSWORD`  | *(empty)*| Database password (see `.env.example`) |
-| `DB_NAME`      | `rope`   | Database name                         |
+```bash
+docker compose up --build   # http://localhost:8080
+```
 
-## 🗄️ Database Tables
+数据保存在 `server/data/tugofwar.db`（Docker 下持久化在 `tugofwar-data` 卷）。环境变量：`PORT`（默认 8080）、`TOW_DB_PATH`。
 
-- `classes`: participating teams/classes
-- `students`: student roster linked to classes
-- `matches`: match schedule with start time and results
-- `attendance`: attendance records for students per match
+## 功能与使用流程
 
-## 🤝 Contributing
+1. **导入名单**（`/import/roster`）：上传 .xlsx，需含 `姓名`、`学号` 列；可选 `班级` 列（按班级分组，不存在的自动建队；无班级列时导入到指定队伍）。先解析预览（可编辑、逐行勾选，标记重复/错误行）再确认提交，支持追加/替换两种模式。
+2. **导入赛程**（`/import/schedule`）：每行 `班级A`、`班级B`、`开始时间`、`赛段`；不存在的班级与赛段自动创建，同样有预览。
+3. **切换赛段**：导航栏「当前赛段」下拉全局切换，赛程/大屏/检录叫号默认聚焦当前赛段。
+4. **检录**（赛程页 → 检录）：双栏名单，点击学生切换到场/未到场，显示进度（如 8/10）；中途补录的队员自动出现；可一键大屏叫号。
+5. **标记正负**（赛程页 → 标记胜负）：每场一正一负，点选胜方即负方确定；支持改判与清除。
+6. **大屏**（`/display`）：深色全屏，3 秒轮询刷新——当前比赛与检录进度、检录叫号横幅、即将开始、已结束结果、滚动公告、本地生成二维码。
+7. **结果导出**（`/results`）：按赛段查看胜/负并导出 Excel（场次、班级A/B、时间、胜方、负方、状态、备注）。
 
-1. Fork the repository and spin up a feature branch.
-2. Run `php -l` across modified scripts before committing.
-3. Submit a pull request with context, screenshots, or test notes.
-4. Use GitHub Issues to report bugs or request new features.
+## 生成测试用 Excel
 
-## 🛡️ License
+```bash
+node server/scripts/make-sample-roster.js     # 测试名单（含重复学号、空姓名等场景）
+node server/scripts/make-sample-schedule.js   # 测试赛程（含自动建队/建赛段场景）
+```
 
-Distributed under the [MIT License](LICENSE). Feel free to use and adapt the code in compliance with the license terms.
+## API 概览
+
+| 分组 | 端点 |
+|---|---|
+| 队伍/队员 | `GET/POST /api/teams`、`PATCH/DELETE /api/teams/:id`、`GET/POST /api/teams/:id/players`、`PATCH/DELETE /api/players/:id` |
+| 赛段 | `GET/POST /api/stages`、`PATCH/DELETE /api/stages/:id`、`GET/PUT /api/stages/current`（当前赛段） |
+| 比赛 | `GET/POST /api/matches`、`PATCH/DELETE /api/matches/:id` |
+| 检录 | `GET /api/matches/:id/checkin`、`PUT /api/matches/:id/checkin/:playerId`、`POST /api/matches/:id/checkin/reset` |
+| 结果 | `PUT /api/matches/:id/result`（`winnerSide`: 0/1/null） |
+| 导入 | `POST /api/import/roster/preview|commit`、`POST /api/import/schedule/preview|commit` |
+| 大屏 | `GET /api/display/state`、`PUT /api/display/current|calling|announcement` |
+| 导出 | `GET /api/export/stage/:id` |
+
+## 目录结构
+
+```
+server/   Express API + SQLite（src/routes/ 按资源分文件）
+web/      Vite + Vue 3 前端
+legacy/   v1 旧版（纯 PHP + MySQL），已废弃，仅作参考
+```
+
+## License
+
+MIT

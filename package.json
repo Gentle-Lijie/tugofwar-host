@@ -1,0 +1,18 @@
+{
+  "name": "tugofwar-host",
+  "version": "2.0.0",
+  "private": true,
+  "description": "拔河比赛管理系统：名单/赛程导入、检录、胜负标记、赛段管理、大屏展示",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm:dev -w server\" \"npm:dev -w web\"",
+    "build": "npm run build -w web",
+    "start": "node server/src/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,34 +1,11 @@
-version: "3.9"
-
 services:
   app:
     build: .
-    container_name: tugofwar_app
     ports:
-      - "8080:80"
-    environment:
-      DB_HOST: mysql
-      DB_USER: ${DB_USER:-root}
-      DB_PASSWORD: ${DB_PASSWORD:-rootpassword}
-      DB_NAME: ${DB_NAME:-rope}
+      - "8080:8080"
     volumes:
-      - ./:/var/www/html
-    depends_on:
-      - mysql
-  mysql:
-    image: mysql:8.0
-    container_name: tugofwar_mysql
+      - tugofwar-data:/app/server/data
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:-rope}
-      MYSQL_USER: ${DB_USER:-root}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-rootpassword}
-      TZ: Asia/Shanghai
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./database/schema/create_database.sql:/docker-entrypoint-initdb.d/create_database.sql:ro
-    ports:
-      - "33060:3306"
+
 volumes:
-  mysql_data:
+  tugofwar-data:
