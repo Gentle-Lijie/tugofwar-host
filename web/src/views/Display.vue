@@ -86,7 +86,7 @@ onUnmounted(() => clearInterval(timer));
 
     <!-- 头部 -->
     <div class="header">
-      <div class="page-title">比赛大屏<span v-if="state.currentStage" class="stage-name"> · {{ state.currentStage.name }}</span></div>
+      <div class="page-title">Wonderful US 2026 拔河比赛<span v-if="state.currentStage" class="stage-name"> · {{ state.currentStage.name }}</span></div>
       <div class="announcement" v-if="state.announcement">{{ state.announcement }}</div>
       <div class="next-match-box" v-if="showCalling">
         {{ callingMatch.teamAName }} 和 {{ callingMatch.teamBName }} 请前往检录台

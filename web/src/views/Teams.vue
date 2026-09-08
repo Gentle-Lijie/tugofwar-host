@@ -3,12 +3,14 @@ import { ref, onMounted } from 'vue';
 import { api } from '../api.js';
 import { PALETTE } from '../colors.js';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import RosterEditor from '../components/RosterEditor.vue';
 
 const teams = ref([]);
 const loading = ref(true);
 const newName = ref('');
 const creating = ref(false);
 const pendingDelete = ref(null);
+const expanded = ref(null); // 当前展开名单的队伍 id
 const toast = ref(null);
 
 function showToast(msg, isError = false) {
@@ -67,11 +69,16 @@ async function doDelete() {
   pendingDelete.value = null;
   try {
     await api.del(`/teams/${team.id}`);
+    if (expanded.value === team.id) expanded.value = null;
     showToast(`已删除「${team.name}」`);
     await load();
   } catch (e) {
     showToast(e.message, true);
   }
+}
+
+function toggleRoster(team) {
+  expanded.value = expanded.value === team.id ? null : team.id;
 }
 </script>
 
@@ -80,7 +87,7 @@ async function doDelete() {
 
   <div class="card row">
     <input v-model="newName" placeholder="新队伍名（班级）" @keyup.enter="create" />
-    <button class="primary" :disabled="creating || !newName.trim()" @click="create">添加队伍</button>
+    <button :disabled="creating || !newName.trim()" @click="create">添加队伍</button>
     <span class="muted" v-if="teams.length">共 {{ teams.length }} 支队伍</span>
   </div>
 
@@ -90,38 +97,49 @@ async function doDelete() {
   </div>
 
   <div class="card" v-else>
-    <table class="list">
+    <table class="list team-table">
       <thead>
         <tr>
+          <th style="width: 30px"></th>
           <th>队伍</th>
-          <th>队员</th>
-          <th>胜 / 负</th>
+          <th style="width: 70px">队员</th>
+          <th style="width: 90px">胜 / 负</th>
           <th>配色</th>
-          <th style="width: 200px">操作</th>
+          <th style="width: 210px">操作</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="t in teams" :key="t.id">
-          <td><router-link :to="`/teams/${t.id}`">{{ t.name }}</router-link></td>
-          <td>{{ t.playerCount }} 人</td>
-          <td>{{ t.wins }} / {{ t.losses }}</td>
-          <td>
-            <div class="palette">
-              <span
-                v-for="c in PALETTE"
-                :key="c"
-                class="swatch"
-                :class="{ active: t.color === c }"
-                :style="{ background: c }"
-                @click="recolor(t, c)"
-              ></span>
-            </div>
-          </td>
-          <td>
-            <button class="small" @click="rename(t)">改名</button>
-            <button class="small danger" @click="pendingDelete = t">删除</button>
-          </td>
-        </tr>
+        <template v-for="t in teams" :key="t.id">
+          <tr :class="{ expanded: expanded === t.id }">
+            <td class="toggle" @click="toggleRoster(t)">{{ expanded === t.id ? '▾' : '▸' }}</td>
+            <td><a href="javascript:void(0)" @click="toggleRoster(t)">{{ t.name }}</a></td>
+            <td>{{ t.playerCount }} 人</td>
+            <td>{{ t.wins }} / {{ t.losses }}</td>
+            <td>
+              <div class="palette">
+                <span
+                  v-for="c in PALETTE"
+                  :key="c"
+                  class="swatch"
+                  :class="{ active: t.color === c }"
+                  :style="{ background: c }"
+                  @click="recolor(t, c)"
+                ></span>
+              </div>
+            </td>
+            <td>
+              <button class="small subtle" @click="toggleRoster(t)">{{ expanded === t.id ? '收起名单' : '名单' }}</button>
+              <button class="small subtle" @click="rename(t)">改名</button>
+              <button class="small danger" @click="pendingDelete = t">删除</button>
+            </td>
+          </tr>
+          <tr v-if="expanded === t.id" class="roster-row">
+            <td></td>
+            <td colspan="5">
+              <RosterEditor :team-id="t.id" @changed="load" />
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>
@@ -149,4 +167,7 @@ async function doDelete() {
   border: 2px solid transparent;
 }
 .swatch.active { border-color: var(--text); }
+.toggle { cursor: pointer; color: var(--muted); user-select: none; }
+tr.expanded td { border-bottom: none; background: #fbfdfd; }
+tr.roster-row > td { padding: 0 10px 12px 40px; }
 </style>

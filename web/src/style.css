@@ -50,6 +50,10 @@ button.danger { background: var(--danger); }
 button.danger:hover { background: #c0392b; }
 button.small { padding: 4px 12px; font-size: 13px; font-weight: normal; }
 
+/* 相邻按钮间距（表格操作列等裸排场景；.row 内已有 gap 不叠加） */
+button + button { margin-left: 6px; }
+:where(.row) button + button { margin-left: 0; }
+
 input, select, textarea {
   font: inherit;
   border: 2px solid #405162;
