@@ -2,7 +2,7 @@
 // 旧版 PHP attendance.php 风格：双栏表格、已签到(青)/未签到(红)、上一场/下一场
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NButton } from 'naive-ui';
+import { NButton, NModal } from 'naive-ui';
 import { api } from '../api.js';
 
 const route = useRoute();
@@ -55,8 +55,25 @@ const neighbors = computed(() => {
   };
 });
 
+// 切换场次二次确认：可选是否同时把大屏叫号切到目标场次
+const pendingGoto = ref(null);
+
 function goto(m) {
   if (!m) return;
+  pendingGoto.value = m;
+}
+
+async function confirmGoto(alsoCall) {
+  const m = pendingGoto.value;
+  pendingGoto.value = null;
+  if (!m) return;
+  if (alsoCall) {
+    try {
+      await api.put('/display/current', { matchId: m.id, calling: true });
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  }
   router.push(`/matches/${m.id}/checkin`);
 }
 
@@ -157,6 +174,20 @@ onUnmounted(() => clearInterval(timer));
     <p class="muted" style="text-align: center">点击学生行切换 已签到 / 未签到</p>
   </template>
   <div v-else class="card">加载中…</div>
+  <!-- 切换场次确认 -->
+  <n-modal :show="!!pendingGoto" preset="card" title="切换比赛" style="width: 420px"
+    @update:show="(v) => !v && (pendingGoto = null)">
+    <p v-if="pendingGoto" style="margin: 0 0 16px">
+      切换到 <b>{{ pendingGoto.stageName }} 第 {{ pendingGoto.sort }} 场</b>：<br />
+      {{ pendingGoto.teamAName }} VS {{ pendingGoto.teamBName }}
+    </p>
+    <div class="row" style="justify-content: flex-end">
+      <n-button size="small" @click="pendingGoto = null">取消</n-button>
+      <n-button size="small" secondary @click="confirmGoto(false)">仅切换</n-button>
+      <n-button size="small" type="primary" @click="confirmGoto(true)">切换并大屏叫号 📢</n-button>
+    </div>
+  </n-modal>
+
   <div v-if="toast" class="toast" :class="{ error: toast.isError }">{{ toast.msg }}</div>
 </template>
 
