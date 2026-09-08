@@ -53,7 +53,7 @@ watch(() => route.path, loadStages);
   <n-config-provider :theme-overrides="themeOverrides">
     <div v-if="!bare" class="shell">
       <header class="topbar">
-        <router-link to="/" class="brand">拔河比赛管理系统</router-link>
+        <router-link to="/" class="brand">班歌拔河赛程管理</router-link>
         <nav>
           <router-link to="/import/roster">导入名单</router-link>
           <router-link to="/import/schedule">导入赛程</router-link>
