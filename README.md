@@ -22,11 +22,51 @@ npm run build      # 构建前端到 web/dist
 npm start          # 单端口 :8080 托管 API + 前端
 ```
 
-Docker：
+## 部署
+
+要求 Node.js ≥ 20（建议 22）。单进程 + 单 SQLite 文件，无需数据库服务器。
 
 ```bash
-docker compose up --build   # http://localhost:8080
+git clone <repo> && cd tugofwar-host
+npm install
+npm run build
+PORT=8080 npm start
 ```
+
+服务监听所有网卡（`0.0.0.0:8080`），场馆局域网内任何设备直接访问：
+
+- 管理端：`http://<主机IP>:8080/`
+- 大屏：`http://<主机IP>:8080/display`（投影仪浏览器打开，点击页面任意处进入全屏）
+
+环境变量：`PORT`（默认 8080）、`TOW_DB_PATH`（SQLite 路径，默认 `server/data/tugofwar.db`）。
+
+**开机自启 / 崩溃重启（systemd 示例）** `/etc/systemd/system/tugofwar.service`：
+
+```ini
+[Unit]
+Description=Tug of War host
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/tugofwar-host
+ExecStart=/usr/bin/node server/src/index.js
+Environment=PORT=8080
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable --now tugofwar
+```
+
+或用 pm2：`npm i -g pm2 && pm2 start server/src/index.js --name tugofwar && pm2 save`。
+
+**数据与备份**：全部数据在 `server/data/tugofwar.db` 一个文件里。备份时先停服务（或复制 `tugofwar.db` + `tugofwar.db-wal` 两个文件）；换机器部署把文件拷到同样位置即可。赛前一空库、赛后留档一份。
+
+** macOS 注意**：首次 `npm install` 编译 better-sqlite3 需要 Xcode Command Line Tools（`xcode-select --install`）。
 
 数据保存在 `server/data/tugofwar.db`（Docker 下持久化在 `tugofwar-data` 卷）。环境变量：`PORT`（默认 8080）、`TOW_DB_PATH`。
 
