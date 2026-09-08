@@ -28,6 +28,7 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const parsedRules = computed(() => {
   const rules = [];
   const errors = [];
+  const warnings = [];
   ruleText.value.split('\n').forEach((line, i) => {
     const s = line.trim();
     if (!s) return;
@@ -46,10 +47,12 @@ const parsedRules = computed(() => {
         errors.push(`第 ${i + 1} 行正则无效：${e.message}`);
         return;
       }
+    } else if (/[|^$*+?()[\]{}\\]/.test(pattern)) {
+      warnings.push(`第 ${i + 1} 行「${pattern}」含正则符号，前缀模式下按字面匹配可能命中不了，如需「或」请切换为正则匹配`);
     }
     rules.push({ pattern, color: color.toLowerCase() });
   });
-  return { rules, errors };
+  return { rules, errors, warnings };
 });
 
 /** 规则预览：当前规则下各队伍将命中的颜色（手动设过色的队伍除外） */
@@ -289,6 +292,9 @@ const columns = [
     />
     <div v-if="parsedRules.errors.length" style="color: #e74c3c; font-size: 13px; margin-top: 8px">
       <div v-for="(e, i) in parsedRules.errors" :key="i">{{ e }}</div>
+    </div>
+    <div v-if="parsedRules.warnings.length" style="color: #e67e22; font-size: 13px; margin-top: 8px">
+      <div v-for="(w, i) in parsedRules.warnings" :key="i">⚠ {{ w }}</div>
     </div>
     <div v-if="rulePreview.length" style="margin-top: 12px">
       <b style="font-size: 13px">预览（{{ ruleMode === 'regex' ? '正则' : '前缀' }}）</b>
