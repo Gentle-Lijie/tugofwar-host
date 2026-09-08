@@ -5,7 +5,6 @@ import QRCode from 'qrcode';
 import { api } from '../api.js';
 
 const state = ref(null);
-const qrDataUrl = ref('');
 const liveQrDataUrl = ref('');
 let timer = null;
 let inFlight = false;
@@ -77,11 +76,6 @@ onMounted(async () => {
   timer = setInterval(() => {
     if (!document.hidden) load();
   }, 3000);
-  try {
-    qrDataUrl.value = await makeQr(window.location.origin);
-  } catch {
-    /* 二维码生成失败不影响主界面 */
-  }
   await refreshLiveQr();
   document.documentElement.addEventListener('click', requestFs, { once: true });
 });
@@ -107,11 +101,7 @@ onUnmounted(() => clearInterval(timer));
 
 <template>
   <div class="screen" v-if="state">
-    <!-- 二维码 -->
-    <div class="qr-code left" v-if="qrDataUrl">
-      <img :src="qrDataUrl" alt="二维码" />
-      <div class="qr-text">扫码访问</div>
-    </div>
+    <!-- 二维码（仅保留右上角图片直播位） -->
     <div class="qr-code right">
       <img v-if="liveQrDataUrl" :src="liveQrDataUrl" alt="图片直播二维码" />
       <div v-else class="qr-placeholder">二维码<br />待配置</div>
