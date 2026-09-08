@@ -253,9 +253,9 @@ onUnmounted(() => clearInterval(timer));
 .team {
   flex: 1;
   text-align: center;
-  padding: 2.2vh;
+  padding: 1.2vh;
   border-radius: 20px;
-  font-size: 3.4vh;
+  font-size: 4vh;
   font-weight: bold;
   color: #10263b;
   margin: 0 1vh;

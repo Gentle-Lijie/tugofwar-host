@@ -1,11 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../api.js';
 import RosterEditor from '../components/RosterEditor.vue';
 
 const route = useRoute();
-const teamId = route.params.id;
+// 组件会被复用（同一路由不同队伍 id），必须响应参数变化
+const teamId = computed(() => Number(route.params.id));
 
 const team = ref(null);
 const toast = ref(null);
@@ -13,13 +14,14 @@ const toast = ref(null);
 async function load() {
   try {
     const teams = await api.get('/teams');
-    team.value = teams.find((t) => t.id === Number(teamId)) || null;
+    team.value = teams.find((t) => t.id === teamId.value) || null;
     if (!team.value) showToast('队伍不存在', true);
   } catch (e) {
     showToast(e.message, true);
   }
 }
-onMounted(() => load().catch((e) => showToast(e.message, true)));
+onMounted(load);
+watch(teamId, load);
 </script>
 
 <template>
@@ -32,7 +34,7 @@ onMounted(() => load().catch((e) => showToast(e.message, true)));
     </h1>
 
     <div class="card">
-      <RosterEditor :team-id="team.id" @changed="load" />
+      <RosterEditor :key="team.id" :team-id="team.id" @changed="load" />
     </div>
   </template>
   <div v-else class="card">加载中…</div>

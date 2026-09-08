@@ -1,13 +1,14 @@
 <script setup>
 // 旧版 PHP attendance.php 风格：双栏表格、已签到(青)/未签到(红)、上一场/下一场
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton } from 'naive-ui';
 import { api } from '../api.js';
 
 const route = useRoute();
 const router = useRouter();
-const matchId = Number(route.params.id);
+// 组件会被复用（同一路由不同比赛 id），必须响应参数变化
+const matchId = computed(() => Number(route.params.id));
 
 const data = ref(null);
 const allMatches = ref([]);
@@ -24,13 +25,18 @@ async function load() {
   if (inFlight) return;
   inFlight = true;
   try {
-    data.value = await api.get(`/matches/${matchId}/checkin`);
+    data.value = await api.get(`/matches/${matchId.value}/checkin`);
   } catch (e) {
     showToast(e.message, true);
   } finally {
     inFlight = false;
   }
 }
+
+watch(matchId, () => {
+  window.scrollTo({ top: 0 });
+  load();
+});
 
 async function loadNeighbors() {
   try {
@@ -41,7 +47,7 @@ async function loadNeighbors() {
 }
 
 const neighbors = computed(() => {
-  const idx = allMatches.value.findIndex((m) => m.id === matchId);
+  const idx = allMatches.value.findIndex((m) => m.id === matchId.value);
   if (idx === -1) return {};
   return {
     prev: allMatches.value[idx - 1] || null,
@@ -59,7 +65,7 @@ async function toggle(team, p) {
   p.present = p.present ? 0 : 1;
   team.present += p.present ? 1 : -1;
   try {
-    await api.put(`/matches/${matchId}/checkin/${p.playerId}`, { present: !!p.present });
+    await api.put(`/matches/${matchId.value}/checkin/${p.playerId}`, { present: !!p.present });
   } catch (e) {
     p.present = p.present ? 0 : 1; // 回滚
     team.present += p.present ? 1 : -1;
@@ -70,7 +76,7 @@ async function toggle(team, p) {
 async function resetAll() {
   if (!confirm('确定把本场比赛全部队员重置为未到场？')) return;
   try {
-    await api.post(`/matches/${matchId}/checkin/reset`);
+    await api.post(`/matches/${matchId.value}/checkin/reset`);
     await load();
   } catch (e) {
     showToast(e.message, true);
@@ -79,7 +85,7 @@ async function resetAll() {
 
 async function setCalling() {
   try {
-    await api.put('/display/current', { matchId, calling: true });
+    await api.put('/display/current', { matchId: matchId.value, calling: true });
     showToast('已在大屏叫号');
   } catch (e) {
     showToast(e.message, true);
@@ -169,7 +175,8 @@ onUnmounted(() => clearInterval(timer));
   width: 50%;
   background: #fff;
 }
-.class-column {
+/* 需要比上面的 background: #fff 优先级高，否则白字落在白底上 */
+.checkin-table > tr > th.class-column {
   background: #10263b;
   color: #fff;
   padding: 10px;
