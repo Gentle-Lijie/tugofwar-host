@@ -3,6 +3,15 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import QRCode from 'qrcode';
 import { api } from '../api.js';
+import { teamColor } from '../colors.js';
+
+// 胜方队伍块用该队颜色高亮（手动色 > 配色规则 > 色板兜底）
+function winnerColor(m, side) {
+  return teamColor({
+    id: side === 'a' ? m.teamAId : m.teamBId,
+    color: side === 'a' ? m.teamAColor : m.teamBColor,
+  });
+}
 
 const state = ref(null);
 const liveQrDataUrl = ref('');
@@ -126,14 +135,22 @@ onUnmounted(() => clearInterval(timer));
         class="match"
         :class="statusOf(m)"
       >
-        <div class="team" :class="{ winner: m.winnerSide === 0 }">
+        <div
+          class="team"
+          :class="{ winner: m.winnerSide === 0 }"
+          :style="m.winnerSide === 0 ? { background: winnerColor(m, 'a') } : null"
+        >
           {{ m.winnerSide === 0 ? '🎉 ' : '' }}{{ m.teamAName }}
         </div>
         <div class="time">
           第{{ m.sort }}场
           <div class="status" :class="statusOf(m)">{{ statusText(m) }}</div>
         </div>
-        <div class="team" :class="{ winner: m.winnerSide === 1 }">
+        <div
+          class="team"
+          :class="{ winner: m.winnerSide === 1 }"
+          :style="m.winnerSide === 1 ? { background: winnerColor(m, 'b') } : null"
+        >
           {{ m.winnerSide === 1 ? '🎉 ' : '' }}{{ m.teamBName }}
         </div>
       </div>
