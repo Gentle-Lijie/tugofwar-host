@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db, normalizeTeamName } from '../db.js';
+import { db, normalizeTeamName, getColorRules, effectiveColor } from '../db.js';
 import { asyncHandler, httpError } from '../middleware.js';
 
 const router = Router();
@@ -11,12 +11,55 @@ SELECT t.id, t.name, t.color,
                                  OR (m.team_b_id = t.id AND m.winner_side = 1)) AS wins,
   (SELECT COUNT(*) FROM matches m WHERE (m.team_a_id = t.id AND m.winner_side = 1)
                                  OR (m.team_b_id = t.id AND m.winner_side = 0)) AS losses
-FROM teams t ORDER BY t.id`;
+FROM teams t ORDER BY t.name`;
 
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    res.json(db.prepare(TEAM_LIST_SQL).all());
+    const rows = db.prepare(TEAM_LIST_SQL).all();
+    // color = 套用规则后的有效色；manualColor 保留原始手动色供前端区分
+    for (const r of rows) {
+      r.manualColor = r.color;
+      r.color = effectiveColor(r.name, r.color);
+    }
+    res.json(rows);
+  })
+);
+
+// ---- 配色规则（批量配置：按前缀/正则把队伍映射到固定 RGB） ----
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+router.get(
+  '/color-rules',
+  asyncHandler(async (req, res) => {
+    res.json(getColorRules());
+  })
+);
+
+router.put(
+  '/color-rules',
+  asyncHandler(async (req, res) => {
+    const mode = req.body.mode === 'regex' ? 'regex' : 'prefix';
+    const rules = Array.isArray(req.body.rules) ? req.body.rules : [];
+    for (const r of rules) {
+      const pattern = String(r.pattern ?? '').trim();
+      if (!pattern) throw httpError(400, '匹配规则不能为空');
+      if (!HEX_RE.test(String(r.color ?? ''))) {
+        throw httpError(400, `颜色必须为严格的 RGB 十六进制（#RRGGBB）：${r.color ?? '(空)'}`);
+      }
+      if (mode === 'regex') {
+        try { new RegExp(pattern); } catch (e) {
+          throw httpError(400, `正则无效「${pattern}」：${e.message}`);
+        }
+      }
+    }
+    const value = JSON.stringify({ mode, rules: rules.map((r) => ({ pattern: String(r.pattern).trim(), color: String(r.color).toLowerCase() })) });
+    db.prepare(
+      `INSERT INTO app_state (key, value) VALUES ('team_color_rules', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`
+    ).run(value);
+    res.json(getColorRules());
   })
 );
 

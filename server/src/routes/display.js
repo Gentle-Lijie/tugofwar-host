@@ -1,11 +1,19 @@
 import { Router } from 'express';
-import { db, getState, setState } from '../db.js';
+import { db, getState, setState, effectiveColor } from '../db.js';
 import { asyncHandler, httpError } from '../middleware.js';
 
 const router = Router();
 
+/** 给查询行的两侧队伍颜色套用配色规则（手动色 > 规则色） */
+function applyColors(row) {
+  if (!row) return row;
+  row.teamAColor = effectiveColor(row.teamAName, row.teamAColor) ?? null;
+  row.teamBColor = effectiveColor(row.teamBName, row.teamBColor) ?? null;
+  return row;
+}
+
 function matchBrief(id) {
-  return db
+  const row = db
     .prepare(
       `SELECT m.id, m.sort, m.start_time AS startTime, m.winner_side AS winnerSide, m.note,
         s.id AS stageId, s.name AS stageName,
@@ -24,6 +32,7 @@ function matchBrief(id) {
       WHERE m.id = ?`
     )
     .get(id);
+  return applyColors(row);
 }
 
 router.get(
@@ -59,7 +68,8 @@ router.get(
       )
       .all(...(currentStageId ? [currentStageId] : []))
       .filter((m) => !currentMatch || m.id !== currentMatch.id)
-      .slice(0, 5);
+      .slice(0, 5)
+      .map(applyColors);
 
     const recentResults = db
       .prepare(
@@ -74,7 +84,8 @@ router.get(
         WHERE m.winner_side IS NOT NULL ${stageFilter}
         ORDER BY m.id DESC LIMIT 8`
       )
-      .all(...(currentStageId ? [currentStageId] : []));
+      .all(...(currentStageId ? [currentStageId] : []))
+      .map(applyColors);
 
     // 大屏列表：当前赛段（未设置则全部）的完整比赛列表
     const matches = db
@@ -90,7 +101,8 @@ router.get(
         WHERE 1=1 ${stageFilter}
         ORDER BY s.sort, m.sort, m.id`
       )
-      .all(...(currentStageId ? [currentStageId] : []));
+      .all(...(currentStageId ? [currentStageId] : []))
+      .map(applyColors);
 
     res.json({
       generatedAt: new Date().toISOString(),

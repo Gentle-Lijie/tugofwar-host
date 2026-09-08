@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db, getState, setState } from '../db.js';
+import { db, getState, setState, effectiveColor } from '../db.js';
 import { asyncHandler, httpError } from '../middleware.js';
 
 const router = Router();
@@ -14,8 +14,16 @@ JOIN stages s ON s.id = m.stage_id
 JOIN teams ta ON ta.id = m.team_a_id
 JOIN teams tb ON tb.id = m.team_b_id`;
 
+/** 给比赛行的两侧队伍颜色套用配色规则（手动色 > 规则色） */
+function applyColors(row) {
+  if (!row) return row;
+  row.teamAColor = effectiveColor(row.teamAName, row.teamAColor) ?? null;
+  row.teamBColor = effectiveColor(row.teamBName, row.teamBColor) ?? null;
+  return row;
+}
+
 function getMatch(id) {
-  return db.prepare(`${MATCH_SELECT} WHERE m.id = ?`).get(id);
+  return applyColors(db.prepare(`${MATCH_SELECT} WHERE m.id = ?`).get(id));
 }
 
 function ensureTeam(id, label) {
@@ -31,7 +39,7 @@ router.get(
     const rows = stageId
       ? db.prepare(`${MATCH_SELECT} WHERE m.stage_id = ? ORDER BY s.sort, m.sort, m.id`).all(stageId)
       : db.prepare(`${MATCH_SELECT} ORDER BY s.sort, m.sort, m.id`).all();
-    res.json(rows);
+    res.json(rows.map(applyColors));
   })
 );
 

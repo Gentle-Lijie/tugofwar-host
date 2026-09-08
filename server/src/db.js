@@ -78,6 +78,7 @@ seedState.run('current_match_id', 'null');
 seedState.run('calling', '0');
 seedState.run('announcement', '');
 seedState.run('image_live_url', '');
+seedState.run('team_color_rules', '{"mode":"prefix","rules":[]}');
 seedState.run('current_stage_id', 'null');
 
 /** 读取 app_state 键值（不存在返回 null） */
@@ -99,4 +100,43 @@ export function normalizeTeamName(name) {
     .replace(/　/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// ---------- 队伍配色规则（批量配置：按前缀或正则把队伍映射到固定 RGB） ----------
+
+/** 读取配色规则 {mode: 'prefix'|'regex', rules: [{pattern, color}]} */
+export function getColorRules() {
+  try {
+    const parsed = JSON.parse(getState('team_color_rules') || '');
+    if (Array.isArray(parsed.rules)) return parsed;
+  } catch {
+    /* 脏数据时退回空规则 */
+  }
+  return { mode: 'prefix', rules: [] };
+}
+
+let compiledPatterns = null; // {mode, regexes: [RegExp|null]}
+
+/** 解析某队伍的有效颜色：手动设置 > 规则命中；未命中返回 null（前端色板兜底） */
+export function effectiveColor(name, manualColor) {
+  if (manualColor) return manualColor;
+  const { mode, rules } = getColorRules();
+  if (!rules.length) return null;
+  if (!compiledPatterns || compiledPatterns.mode !== mode || compiledPatterns.regexes.length !== rules.length) {
+    compiledPatterns = {
+      mode,
+      regexes: rules.map((r) => {
+        try { return new RegExp(r.pattern); } catch { return null; }
+      }),
+    };
+  }
+  const s = String(name ?? '');
+  for (let i = 0; i < rules.length; i++) {
+    if (mode === 'regex') {
+      if (compiledPatterns.regexes[i]?.test(s)) return rules[i].color;
+    } else if (s.startsWith(rules[i].pattern)) {
+      return rules[i].color;
+    }
+  }
+  return null;
 }
