@@ -168,6 +168,40 @@ export async function parseSchedule(buffer) {
   return rows;
 }
 
+// ---------- 导入模板 ----------
+
+/** 名单导入模板（班级列可选：删除该列则导入到指定队伍） */
+export async function buildRosterTemplate() {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('名单');
+  ws.columns = [
+    { header: '班级', key: 'team', width: 18 },
+    { header: '姓名', key: 'name', width: 12 },
+    { header: '学号', key: 'no', width: 14 },
+  ];
+  ws.addRow({ team: '高一(1)班', name: '张三', no: 2024001 });
+  ws.addRow({ team: '高一(1)班', name: '李四', no: 2024002 });
+  ws.addRow({ team: '高一(2)班', name: '王五', no: 2025001 });
+  ws.getRow(1).font = { bold: true };
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
+/** 赛程导入模板 */
+export async function buildScheduleTemplate() {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('赛程');
+  ws.columns = [
+    { header: '班级A', key: 'a', width: 18 },
+    { header: '班级B', key: 'b', width: 18 },
+    { header: '开始时间', key: 't', width: 12 },
+    { header: '赛段', key: 's', width: 16 },
+  ];
+  ws.addRow({ a: '高一(1)班', b: '高一(2)班', t: '09:00', s: '循环赛' });
+  ws.addRow({ a: '高一(3)班', b: '高一(4)班', t: '09:10', s: '循环赛' });
+  ws.getRow(1).font = { bold: true };
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
 // ---------- 结果导出 ----------
 
 /**

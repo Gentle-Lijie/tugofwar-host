@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { NButton, NInput, NTag } from 'naive-ui';
 import { api } from '../api.js';
 import MatchCard from '../components/MatchCard.vue';
 
@@ -7,7 +8,8 @@ const state = ref(null);
 const stages = ref([]);
 const teams = ref([]);
 const announcement = ref('');
-const savingAnn = ref(false);
+const imageLiveUrl = ref('');
+const saving = ref(false);
 const toast = ref(null);
 
 function showToast(msg, isError = false) {
@@ -23,6 +25,7 @@ async function load() {
       api.get('/teams'),
     ]);
     announcement.value = state.value.announcement || '';
+    imageLiveUrl.value = state.value.imageLiveUrl || '';
   } catch (e) {
     showToast(e.message, true);
   }
@@ -73,15 +76,18 @@ async function toggleCalling() {
   }
 }
 
-async function saveAnnouncement() {
-  savingAnn.value = true;
+async function saveSettings() {
+  saving.value = true;
   try {
-    await api.put('/display/announcement', { text: announcement.value });
-    showToast('公告已更新');
+    await Promise.all([
+      api.put('/display/announcement', { text: announcement.value }),
+      api.put('/display/image-live', { url: imageLiveUrl.value.trim() }),
+    ]);
+    showToast('大屏设置已更新');
   } catch (e) {
     showToast(e.message, true);
   } finally {
-    savingAnn.value = false;
+    saving.value = false;
   }
 }
 </script>
@@ -104,10 +110,10 @@ async function saveAnnouncement() {
     <div class="row" style="justify-content: space-between; margin-bottom: 12px">
       <b>大屏叫号控制</b>
       <div class="row" v-if="state.currentMatch">
-        <button class="small" @click="toggleCalling">
+        <n-button size="small" @click="toggleCalling">
           {{ state.calling ? '🔇 停止叫号横幅' : '📢 恢复叫号横幅' }}
-        </button>
-        <button class="small danger" @click="stopCalling">结束当前比赛</button>
+        </n-button>
+        <n-button size="small" type="error" secondary @click="stopCalling">结束当前比赛</n-button>
       </div>
     </div>
 
@@ -122,30 +128,41 @@ async function saveAnnouncement() {
     <div class="call-list" v-if="!state.currentMatch">
       <div v-for="m in callable" :key="m.id" class="call-item">
         <MatchCard :match="m" show-stage />
-        <button class="small primary" @click="callMatch(m)">开始叫号</button>
+        <n-button size="small" type="primary" @click="callMatch(m)">开始叫号</n-button>
       </div>
       <p v-if="!callable.length" class="muted">当前赛段没有待赛的比赛（或未设置当前赛段）。</p>
     </div>
   </div>
 
-  <!-- 公告 -->
+  <!-- 大屏设置 -->
   <div class="card" v-if="state">
-    <b>大屏公告</b>
-    <div class="row" style="margin-top: 10px">
-      <input v-model="announcement" placeholder="滚动显示在大屏顶部（留空则不显示）" style="flex: 1" />
-      <button class="primary" :disabled="savingAnn" @click="saveAnnouncement">保存</button>
+    <b>大屏设置</b>
+    <div class="form">
+      <div class="field">
+        <span>公告</span>
+        <n-input v-model:value="announcement" placeholder="滚动显示在大屏标题下方（留空则不显示）" />
+      </div>
+      <div class="field">
+        <span>图片直播二维码</span>
+        <n-input v-model:value="imageLiveUrl" placeholder="图片直播链接（http(s)://…，留空显示占位框）" />
+      </div>
+    </div>
+    <div class="row" style="justify-content: flex-end; margin-top: 12px">
+      <n-button size="small" type="primary" :disabled="saving" @click="saveSettings">
+        {{ saving ? '保存中…' : '保存' }}
+      </n-button>
     </div>
   </div>
 
   <div class="card">
     <b>快捷入口</b>
     <div class="quick row" style="margin-top: 10px">
-      <router-link to="/import/roster"><button>导入名单</button></router-link>
-      <router-link to="/import/schedule"><button>导入赛程</button></router-link>
-      <router-link to="/teams"><button>队伍管理</button></router-link>
-      <router-link to="/schedule"><button>赛程管理</button></router-link>
-      <router-link to="/results"><button>赛段结果</button></router-link>
-      <a href="/display" target="_blank"><button>打开大屏 ↗</button></a>
+      <router-link to="/import/roster"><n-button size="small">导入名单</n-button></router-link>
+      <router-link to="/import/schedule"><n-button size="small">导入赛程</n-button></router-link>
+      <router-link to="/teams"><n-button size="small">队伍管理</n-button></router-link>
+      <router-link to="/schedule"><n-button size="small">赛程管理</n-button></router-link>
+      <router-link to="/results"><n-button size="small">赛段结果</n-button></router-link>
+      <a href="/display" target="_blank"><n-button size="small">打开大屏 ↗</n-button></a>
     </div>
   </div>
 
@@ -155,9 +172,11 @@ async function saveAnnouncement() {
 <style scoped>
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px; }
 .stat { text-align: center; padding: 18px; }
-.num { font-size: 28px; font-weight: 700; color: var(--primary); }
-.lbl { color: var(--muted); margin-top: 4px; }
+.num { font-size: 28px; font-weight: 700; color: #2980b9; }
+.lbl { color: #707d89; margin-top: 4px; }
 .call-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .call-item { display: flex; align-items: center; gap: 12px; }
 .call-item > :first-child { flex: 1; }
+.form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.field { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 10px; }
 </style>

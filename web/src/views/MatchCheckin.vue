@@ -2,6 +2,7 @@
 // 旧版 PHP attendance.php 风格：双栏表格、已签到(青)/未签到(红)、上一场/下一场
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { NButton } from 'naive-ui';
 import { api } from '../api.js';
 
 const route = useRoute();
@@ -103,8 +104,8 @@ onUnmounted(() => clearInterval(timer));
     </h1>
 
     <div class="row" style="justify-content: center; margin-bottom: 16px">
-      <button @click="setCalling">📢 大屏叫号</button>
-      <button class="danger" @click="resetAll">全部重置</button>
+      <n-button type="primary" @click="setCalling">📢 大屏叫号</n-button>
+      <n-button type="error" secondary @click="resetAll">全部重置</n-button>
     </div>
 
     <table class="checkin-table">
@@ -140,12 +141,12 @@ onUnmounted(() => clearInterval(timer));
     </table>
 
     <div style="text-align: center; margin: 20px 0">
-      <button v-if="neighbors.prev" class="subtle" @click="goto(neighbors.prev)">
+      <n-button v-if="neighbors.prev" secondary style="margin-right: 10px" @click="goto(neighbors.prev)">
         上一场（{{ neighbors.prev.teamAName }} VS {{ neighbors.prev.teamBName }}）
-      </button>
-      <button v-if="neighbors.next" class="subtle" @click="goto(neighbors.next)">
+      </n-button>
+      <n-button v-if="neighbors.next" secondary @click="goto(neighbors.next)">
         下一场（{{ neighbors.next.teamAName }} VS {{ neighbors.next.teamBName }}）
-      </button>
+      </n-button>
     </div>
     <p class="muted" style="text-align: center">点击学生行切换 已签到 / 未签到</p>
   </template>

@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, h, onMounted } from 'vue';
+import { NDataTable, NButton, NInput, NTag } from 'naive-ui';
 import { api } from '../api.js';
 import { PALETTE } from '../colors.js';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -10,7 +11,6 @@ const loading = ref(true);
 const newName = ref('');
 const creating = ref(false);
 const pendingDelete = ref(null);
-const expanded = ref(null); // 当前展开名单的队伍 id
 const toast = ref(null);
 
 function showToast(msg, isError = false) {
@@ -69,7 +69,6 @@ async function doDelete() {
   pendingDelete.value = null;
   try {
     await api.del(`/teams/${team.id}`);
-    if (expanded.value === team.id) expanded.value = null;
     showToast(`已删除「${team.name}」`);
     await load();
   } catch (e) {
@@ -77,18 +76,88 @@ async function doDelete() {
   }
 }
 
-function toggleRoster(team) {
-  expanded.value = expanded.value === team.id ? null : team.id;
-}
+const columns = [
+  { type: 'expand', renderExpand: (row) => h(RosterEditor, { teamId: row.id, onChanged: load }) },
+  {
+    title: '队伍',
+    key: 'name',
+    render: (row) =>
+      h(
+        'span',
+        {
+          style: { fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' },
+        },
+        [
+          h('span', {
+            style: {
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: row.color || PALETTE[(row.id ?? 0) % PALETTE.length],
+              display: 'inline-block',
+            },
+          }),
+          row.name,
+        ]
+      ),
+  },
+  {
+    title: '队员',
+    key: 'playerCount',
+    width: 80,
+    render: (row) => `${row.playerCount} 人`,
+  },
+  {
+    title: '胜 / 负',
+    key: 'record',
+    width: 90,
+    render: (row) => `${row.wins} / ${row.losses}`,
+  },
+  {
+    title: '配色',
+    key: 'color',
+    render: (row) =>
+      h(
+        'div',
+        { style: { display: 'flex', gap: '5px' } },
+        PALETTE.map((c) =>
+          h('span', {
+            class: 'swatch' + (row.color === c ? ' active' : ''),
+            style: { background: c },
+            onClick: () => recolor(row, c),
+          })
+        )
+      ),
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 190,
+    render: (row) => [
+      h(NButton, { size: 'tiny', secondary: true, onClick: () => rename(row) }, { default: () => '改名' }),
+      h(
+        NButton,
+        {
+          size: 'tiny',
+          type: 'error',
+          secondary: true,
+          style: 'margin-left: 6px',
+          onClick: () => (pendingDelete.value = row),
+        },
+        { default: () => '删除' }
+      ),
+    ],
+  },
+];
 </script>
 
 <template>
   <h1 class="page-title">队伍管理</h1>
 
   <div class="card row">
-    <input v-model="newName" placeholder="新队伍名（班级）" @keyup.enter="create" />
-    <button :disabled="creating || !newName.trim()" @click="create">添加队伍</button>
-    <span class="muted" v-if="teams.length">共 {{ teams.length }} 支队伍</span>
+    <n-input v-model:value="newName" placeholder="新队伍名（班级）" style="width: 220px" @keyup.enter="create" />
+    <n-button type="primary" :disabled="creating || !newName.trim()" @click="create">添加队伍</n-button>
+    <n-tag v-if="teams.length" size="small" type="info" :bordered="false">共 {{ teams.length }} 支队伍</n-tag>
   </div>
 
   <div class="card" v-if="loading">加载中…</div>
@@ -97,51 +166,8 @@ function toggleRoster(team) {
   </div>
 
   <div class="card" v-else>
-    <table class="list team-table">
-      <thead>
-        <tr>
-          <th style="width: 30px"></th>
-          <th>队伍</th>
-          <th style="width: 70px">队员</th>
-          <th style="width: 90px">胜 / 负</th>
-          <th>配色</th>
-          <th style="width: 210px">操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="t in teams" :key="t.id">
-          <tr :class="{ expanded: expanded === t.id }">
-            <td class="toggle" @click="toggleRoster(t)">{{ expanded === t.id ? '▾' : '▸' }}</td>
-            <td><a href="javascript:void(0)" @click="toggleRoster(t)">{{ t.name }}</a></td>
-            <td>{{ t.playerCount }} 人</td>
-            <td>{{ t.wins }} / {{ t.losses }}</td>
-            <td>
-              <div class="palette">
-                <span
-                  v-for="c in PALETTE"
-                  :key="c"
-                  class="swatch"
-                  :class="{ active: t.color === c }"
-                  :style="{ background: c }"
-                  @click="recolor(t, c)"
-                ></span>
-              </div>
-            </td>
-            <td>
-              <button class="small subtle" @click="toggleRoster(t)">{{ expanded === t.id ? '收起名单' : '名单' }}</button>
-              <button class="small subtle" @click="rename(t)">改名</button>
-              <button class="small danger" @click="pendingDelete = t">删除</button>
-            </td>
-          </tr>
-          <tr v-if="expanded === t.id" class="roster-row">
-            <td></td>
-            <td colspan="5">
-              <RosterEditor :team-id="t.id" @changed="load" />
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+    <n-data-table :columns="columns" :data="teams" :row-key="(r) => r.id" size="small" />
+    <p class="muted" style="font-size: 13px; margin: 8px 0 0">点击行首箭头展开队伍名单，可直接增改删队员。</p>
   </div>
 
   <ConfirmDialog
@@ -157,17 +183,14 @@ function toggleRoster(team) {
   <div v-if="toast" class="toast" :class="{ error: toast.isError }">{{ toast.msg }}</div>
 </template>
 
-<style scoped>
-.palette { display: flex; gap: 5px; }
+<style>
 .swatch {
   width: 16px;
   height: 16px;
   border-radius: 4px;
   cursor: pointer;
   border: 2px solid transparent;
+  display: inline-block;
 }
-.swatch.active { border-color: var(--text); }
-.toggle { cursor: pointer; color: var(--muted); user-select: none; }
-tr.expanded td { border-bottom: none; background: #fbfdfd; }
-tr.roster-row > td { padding: 0 10px 12px 40px; }
+.swatch.active { border-color: #10263b; }
 </style>

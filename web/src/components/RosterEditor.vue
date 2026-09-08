@@ -1,6 +1,7 @@
 <script setup>
 // 队伍名单展示 + 编辑（增/改/删），供队伍管理页展开行与队伍详情页复用
-import { ref, onMounted } from 'vue';
+import { ref, h, onMounted } from 'vue';
+import { NDataTable, NButton, NInput, NTag } from 'naive-ui';
 import { api } from '../api.js';
 
 const props = defineProps({
@@ -76,54 +77,110 @@ async function remove(p) {
     showToast(e.message, true);
   }
 }
+
+const columns = [
+  {
+    title: '#',
+    key: 'idx',
+    width: 50,
+    render: (row, i) => i + 1,
+  },
+  {
+    title: '姓名',
+    key: 'name',
+    render: (row) =>
+      editing.value && editing.value.id === row.id
+        ? h(NInput, {
+            size: 'small',
+            value: editing.value.name,
+            'onUpdate:value': (v) => (editing.value.name = v),
+            onKeyup: (e) => e.key === 'Enter' && saveEdit(),
+            style: 'width: 120px',
+          })
+        : row.name,
+  },
+  {
+    title: '学号',
+    key: 'studentNo',
+    render: (row) =>
+      editing.value && editing.value.id === row.id
+        ? h(NInput, {
+            size: 'small',
+            value: editing.value.studentNo,
+            'onUpdate:value': (v) => (editing.value.studentNo = v),
+            onKeyup: (e) => e.key === 'Enter' && saveEdit(),
+            style: 'width: 140px',
+          })
+        : h('span', { class: 'muted' }, row.studentNo),
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 170,
+    render: (row) =>
+      editing.value && editing.value.id === row.id
+        ? [
+            h(
+              NButton,
+              { size: 'tiny', type: 'primary', onClick: saveEdit },
+              { default: () => '保存' }
+            ),
+            h(
+              NButton,
+              { size: 'tiny', style: 'margin-left: 6px', onClick: () => (editing.value = null) },
+              { default: () => '取消' }
+            ),
+          ]
+        : [
+            h(
+              NButton,
+              {
+                size: 'tiny',
+                secondary: true,
+                onClick: () => (editing.value = { ...row }),
+              },
+              { default: () => '编辑' }
+            ),
+            h(
+              NButton,
+              {
+                size: 'tiny',
+                type: 'error',
+                secondary: true,
+                style: 'margin-left: 6px',
+                onClick: () => remove(row),
+              },
+              { default: () => '删除' }
+            ),
+          ],
+  },
+];
 </script>
 
 <template>
   <div class="roster">
     <div class="row add-row">
-      <input v-model="newName" placeholder="姓名" style="width: 130px" @keyup.enter="add" />
-      <input v-model="newNo" placeholder="学号" style="width: 150px" @keyup.enter="add" />
-      <button class="small" :disabled="adding || !newName.trim() || !newNo.trim()" @click="add">添加队员</button>
-      <span class="muted">共 {{ players.length }} 人</span>
+      <n-input v-model:value="newName" placeholder="姓名" size="small" style="width: 130px" @keyup.enter="add" />
+      <n-input v-model:value="newNo" placeholder="学号" size="small" style="width: 150px" @keyup.enter="add" />
+      <n-button size="small" :disabled="adding || !newName.trim() || !newNo.trim()" @click="add">
+        添加队员
+      </n-button>
+      <n-tag v-if="!loading" size="small" type="info" :bordered="false">共 {{ players.length }} 人</n-tag>
     </div>
 
-    <p v-if="loading" class="muted">加载中…</p>
-    <p v-else-if="!players.length" class="muted">
-      暂无队员。可在此手动添加，或到 <router-link to="/import/roster">导入名单</router-link> 上传 Excel。
-    </p>
-
-    <table class="list" v-else>
-      <thead>
-        <tr><th style="width: 44px">#</th><th>姓名</th><th>学号</th><th style="width: 150px">操作</th></tr>
-      </thead>
-      <tbody>
-        <tr v-for="(p, i) in players" :key="p.id">
-          <template v-if="editing && editing.id === p.id">
-            <td>{{ i + 1 }}</td>
-            <td><input v-model="editing.name" style="width: 110px" @keyup.enter="saveEdit" /></td>
-            <td><input v-model="editing.studentNo" style="width: 130px" @keyup.enter="saveEdit" /></td>
-            <td class="row">
-              <button class="small" @click="saveEdit">保存</button>
-              <button class="small subtle" @click="editing = null">取消</button>
-            </td>
-          </template>
-          <template v-else>
-            <td class="muted">{{ i + 1 }}</td>
-            <td>{{ p.name }}</td>
-            <td class="muted">{{ p.studentNo }}</td>
-            <td>
-              <button class="small subtle" @click="editing = { ...p }">编辑</button>
-              <button class="small danger" @click="remove(p)">删除</button>
-            </td>
-          </template>
-        </tr>
-      </tbody>
-    </table>
+    <n-data-table
+      :columns="columns"
+      :data="players"
+      :loading="loading"
+      :row-key="(r) => r.id"
+      size="small"
+      :bordered="false"
+    />
     <div v-if="toast" class="toast" :class="{ error: toast.isError }">{{ toast.msg }}</div>
   </div>
 </template>
 
 <style scoped>
-.roster { padding: 6px 0; }
+.roster { padding: 4px 0; }
 .add-row { margin-bottom: 10px; }
 </style>

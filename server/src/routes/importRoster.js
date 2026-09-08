@@ -2,10 +2,18 @@ import { Router } from 'express';
 import multer from 'multer';
 import { db, normalizeTeamName } from '../db.js';
 import { asyncHandler, httpError } from '../middleware.js';
-import { parseRoster } from '../excel.js';
+import { parseRoster, buildRosterTemplate } from '../excel.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+/** 下载名单导入模板 */
+router.get('/template', async (req, res) => {
+  const buf = await buildRosterTemplate();
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent('名单导入模板.xlsx')}`);
+  res.send(buf);
+});
 
 /**
  * 校验一组名单行，产出逐行状态。

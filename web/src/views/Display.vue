@@ -1,14 +1,19 @@
 <script setup>
 // 旧版 PHP display.php 的布局与配色：米色背景、队伍灰块、胜者青色 + 🎉、黑底叫号框、3s 轮询
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import QRCode from 'qrcode';
 import { api } from '../api.js';
 
 const state = ref(null);
 const qrDataUrl = ref('');
+const liveQrDataUrl = ref('');
 let timer = null;
 let inFlight = false;
 let scrolledOnce = false;
+
+async function makeQr(text) {
+  return QRCode.toDataURL(text, { width: 200, margin: 1 });
+}
 
 async function load() {
   if (inFlight) return;
@@ -27,6 +32,18 @@ async function load() {
     inFlight = false;
   }
 }
+
+// 配置的图片直播链接变化时重新生成二维码
+let lastLiveUrl = '';
+watch(
+  () => state.value?.imageLiveUrl,
+  (url) => {
+    if (url !== lastLiveUrl) {
+      lastLiveUrl = url || '';
+      refreshLiveQr();
+    }
+  }
+);
 
 // 叫号框：优先当前叫号比赛，否则下一场未赛
 const callingMatch = computed(() => {
@@ -61,17 +78,29 @@ onMounted(async () => {
     if (!document.hidden) load();
   }, 3000);
   try {
-    qrDataUrl.value = await QRCode.toDataURL(window.location.origin, {
-      width: 200,
-      margin: 1,
-    });
+    qrDataUrl.value = await makeQr(window.location.origin);
   } catch {
     /* 二维码生成失败不影响主界面 */
   }
+  await refreshLiveQr();
   document.documentElement.addEventListener('click', requestFs, { once: true });
 });
 function requestFs() {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+}
+
+// 图片直播二维码：配置了链接就生成真码，没配置保持占位
+async function refreshLiveQr() {
+  const url = state.value?.imageLiveUrl;
+  if (!url) {
+    liveQrDataUrl.value = '';
+    return;
+  }
+  try {
+    liveQrDataUrl.value = await makeQr(url);
+  } catch {
+    liveQrDataUrl.value = '';
+  }
 }
 onUnmounted(() => clearInterval(timer));
 </script>
@@ -84,7 +113,8 @@ onUnmounted(() => clearInterval(timer));
       <div class="qr-text">扫码访问</div>
     </div>
     <div class="qr-code right">
-      <div class="qr-placeholder">二维码<br />待配置</div>
+      <img v-if="liveQrDataUrl" :src="liveQrDataUrl" alt="图片直播二维码" />
+      <div v-else class="qr-placeholder">二维码<br />待配置</div>
       <div class="qr-text">图片直播</div>
     </div>
 

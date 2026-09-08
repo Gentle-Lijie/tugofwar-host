@@ -98,6 +98,7 @@ router.get(
       currentMatch,
       calling: getState('calling') === '1',
       announcement: getState('announcement') || '',
+      imageLiveUrl: getState('image_live_url') || '',
       upcoming,
       recentResults,
       matches,
@@ -127,6 +128,17 @@ router.put(
   asyncHandler(async (req, res) => {
     setState('announcement', String(req.body.text ?? '').slice(0, 500));
     res.json({ ok: true });
+  })
+);
+
+/** 配置图片直播二维码指向的链接（留空则大屏显示占位框） */
+router.put(
+  '/image-live',
+  asyncHandler(async (req, res) => {
+    const url = String(req.body.url ?? '').trim().slice(0, 500);
+    if (url && !/^https?:\/\//i.test(url)) throw httpError(400, '链接需要以 http:// 或 https:// 开头');
+    setState('image_live_url', url);
+    res.json({ ok: true, url });
   })
 );
 

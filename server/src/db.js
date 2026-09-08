@@ -77,6 +77,7 @@ const seedState = db.prepare('INSERT OR IGNORE INTO app_state (key, value) VALUE
 seedState.run('current_match_id', 'null');
 seedState.run('calling', '0');
 seedState.run('announcement', '');
+seedState.run('image_live_url', '');
 seedState.run('current_stage_id', 'null');
 
 /** 读取 app_state 键值（不存在返回 null） */

@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { api } from '../api.js';
+import { ref, computed, h } from 'vue';
+import { NDataTable, NButton, NInput, NTag, NCheckbox } from 'naive-ui';
+import { api, download } from '../api.js';
 
 const step = ref(1);
 const file = ref(null);
@@ -18,9 +19,60 @@ const summary = computed(() => {
   return { include, skip: rows.value.length - include };
 });
 
-function onFile(e) {
-  file.value = e.target.files[0] || null;
+async function downloadTemplate() {
+  try {
+    await download('/import/schedule/template', '赛程导入模板.xlsx');
+  } catch (e) {
+    toast.value = { msg: e.message, isError: true };
+    setTimeout(() => (toast.value = null), 2500);
+  }
 }
+
+const STATUS_TYPE = { ok: 'success', team_new: 'warning', stage_new: 'warning', error: 'error' };
+
+const columns = [
+  {
+    title: '',
+    key: 'include',
+    width: 44,
+    render: (r) => h(NCheckbox, { checked: r.include, 'onUpdate:checked': (v) => (r.include = v) }),
+  },
+  { title: '行号', key: 'rowNo', width: 64, render: (r) => h('span', { class: 'muted' }, r.rowNo) },
+  {
+    title: '班级A',
+    key: 'teamA',
+    render: (r) => h(NInput, { size: 'small', value: r.teamA, disabled: !r.include, 'onUpdate:value': (v) => (r.teamA = v), style: 'width: 130px' }),
+  },
+  {
+    title: '班级B',
+    key: 'teamB',
+    render: (r) => h(NInput, { size: 'small', value: r.teamB, disabled: !r.include, 'onUpdate:value': (v) => (r.teamB = v), style: 'width: 130px' }),
+  },
+  {
+    title: '开始时间',
+    key: 'startTime',
+    width: 110,
+    render: (r) => h(NInput, { size: 'small', value: r.startTime, disabled: !r.include, 'onUpdate:value': (v) => (r.startTime = v), style: 'width: 90px' }),
+  },
+  {
+    title: '赛段',
+    key: 'stageName',
+    width: 130,
+    render: (r) => h(NInput, {
+      size: 'small',
+      value: r.stageName,
+      disabled: !r.include,
+      placeholder: r.defaultStage || '循环赛',
+      'onUpdate:value': (v) => (r.stageName = v),
+      style: 'width: 110px',
+    }),
+  },
+  {
+    title: '状态',
+    key: 'status',
+    render: (r) => h(NTag, { size: 'small', type: STATUS_TYPE[r.status] || 'default', bordered: false }, { default: () => r.message }),
+  },
+];
 
 async function preview() {
   if (!file.value) return;
@@ -68,13 +120,6 @@ function reset() {
   rows.value = [];
   result.value = null;
 }
-
-const STATUS_CLS = {
-  ok: 'ok',
-  team_new: 'warn',
-  stage_new: 'warn',
-  error: 'err',
-};
 </script>
 
 <template>
@@ -86,29 +131,30 @@ const STATUS_CLS = {
       不存在的班级与赛段会在导入时自动创建。
     </p>
     <div class="row">
-      <input type="file" accept=".xlsx" @change="onFile" />
-      <button class="primary" :disabled="!file || uploading" @click="preview">
+      <input type="file" accept=".xlsx" @change="(e) => (file = e.target.files[0] || null)" />
+      <n-button type="primary" :disabled="!file || uploading" @click="preview">
         {{ uploading ? '解析中…' : '解析预览' }}
-      </button>
+      </n-button>
+      <n-button size="small" @click="downloadTemplate">⬇ 下载模板</n-button>
     </div>
-    <p v-if="error" style="color: var(--danger)">{{ error }}</p>
+    <p v-if="error" style="color: #e74c3c">{{ error }}</p>
   </div>
 
   <template v-else>
     <div class="card row" v-if="result === null">
       <span>共 {{ rows.length }} 场</span>
-      <span class="badge ok">导入 {{ summary.include }}</span>
-      <span class="badge muted">跳过 {{ summary.skip }}</span>
+      <n-tag type="success" :bordered="false">导入 {{ summary.include }}</n-tag>
+      <n-tag :bordered="false">跳过 {{ summary.skip }}</n-tag>
       <span style="flex: 1"></span>
-      <button @click="reset">返回重选</button>
+      <n-button size="small" @click="reset">返回重选</n-button>
     </div>
 
-    <div class="card" v-if="result" style="border-color: #86efac; background: #f0fdf4">
+    <div class="card" v-if="result" style="border: 1px solid #86efac; background: #f0fdf4">
       <b>导入完成</b>：新建队伍 {{ result.teamsCreated }} · 新建赛段 {{ result.stagesCreated }} ·
       导入比赛 {{ result.matchesCreated }} 场
       <div class="row" style="margin-top: 10px">
-        <router-link to="/schedule"><button>查看赛程</button></router-link>
-        <button class="primary" @click="reset">继续导入</button>
+        <router-link to="/schedule"><n-button size="small">查看赛程</n-button></router-link>
+        <n-button size="small" type="primary" @click="reset">继续导入</n-button>
       </div>
     </div>
 
@@ -116,48 +162,21 @@ const STATUS_CLS = {
       <div class="card" v-if="newTeams.length || newStages.length">
         <div v-if="newTeams.length">将自动创建队伍：<b>{{ newTeams.join('、') }}</b></div>
         <div v-if="newStages.length" style="margin-top: 4px">
-          将自动创建赛段：<b>{{ newStages.join('、') }}</b>（可在赛程页调整顺序）
+          将自动创建赛段：<b>{{ newStages.join('、') }}</b>（可在赛程页调整）
         </div>
       </div>
 
       <div class="card">
-        <table class="list">
-          <thead>
-            <tr>
-              <th style="width: 36px"></th>
-              <th style="width: 60px">行号</th>
-              <th>班级A</th>
-              <th>班级B</th>
-              <th>开始时间</th>
-              <th>赛段</th>
-              <th>状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in rows" :key="r.rowNo" :class="{ excluded: !r.include }">
-              <td><input type="checkbox" v-model="r.include" /></td>
-              <td class="muted">{{ r.rowNo }}</td>
-              <td><input v-model="r.teamA" style="width: 130px" :disabled="!r.include" /></td>
-              <td><input v-model="r.teamB" style="width: 130px" :disabled="!r.include" /></td>
-              <td><input v-model="r.startTime" style="width: 90px" :disabled="!r.include" /></td>
-              <td><input v-model="r.stageName" style="width: 110px" :disabled="!r.include" :placeholder="r.defaultStage || '循环赛'" /></td>
-              <td><span class="badge" :class="STATUS_CLS[r.status]">{{ r.message }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <n-data-table :columns="columns" :data="rows" :row-key="(r) => r.rowNo" size="small" />
       </div>
 
       <div class="card row">
-        <button class="primary" :disabled="committing || summary.include === 0" @click="commit">
+        <n-button type="primary" :disabled="committing || summary.include === 0" @click="commit">
           {{ committing ? '导入中…' : `确认导入 ${summary.include} 场` }}
-        </button>
+        </n-button>
       </div>
     </template>
   </template>
 
   <div v-if="toast" class="toast" :class="{ error: toast.isError }">{{ toast.msg }}</div>
 </template>
-
-<style scoped>
-tr.excluded { opacity: 0.5; }
-</style>

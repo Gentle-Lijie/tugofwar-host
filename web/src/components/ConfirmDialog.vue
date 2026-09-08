@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
+import { NButton } from 'naive-ui';
 
 const props = defineProps({
   visible: Boolean,
@@ -21,10 +22,10 @@ watch(show, (v) => { if (!v) emit('cancel'); });
       <h3>{{ title }}</h3>
       <p>{{ message }}</p>
       <div class="actions">
-        <button @click="show = false">取消</button>
-        <button :class="danger ? 'danger' : 'primary'" @click="show = false; emit('confirm')">
+        <n-button size="small" @click="show = false">取消</n-button>
+        <n-button size="small" :type="danger ? 'error' : 'primary'" @click="show = false; emit('confirm')">
           {{ confirmText }}
-        </button>
+        </n-button>
       </div>
     </div>
   </div>
@@ -34,7 +35,7 @@ watch(show, (v) => { if (!v) emit('cancel'); });
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(16, 38, 59, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,6 +49,6 @@ watch(show, (v) => { if (!v) emit('cancel'); });
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 .dialog h3 { margin: 0 0 10px; }
-.dialog p { margin: 0 0 18px; color: var(--muted); white-space: pre-line; }
+.dialog p { margin: 0 0 18px; color: #707d89; white-space: pre-line; }
 .actions { display: flex; justify-content: flex-end; gap: 10px; }
 </style>
