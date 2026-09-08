@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 一键部署：拉代码 → 装依赖 → 构建前端 → 启动/重启服务
+# 一键部署：装依赖 → 构建前端 → 启动/重启服务（代码同步由外部完成，本脚本不拉取）
 # 用法：在仓库根目录执行 ./deploy.sh
 # 要求：Node.js >= 20.6（使用内置 --env-file 读取 .env，无需额外依赖）
 set -euo pipefail
@@ -11,19 +11,15 @@ if [ ! -f .env ]; then
   echo "==> 已生成 .env（默认 PORT=8080，可按需修改）"
 fi
 
-# 2. 拉取最新代码
-echo "==> git pull"
-git pull --ff-only
-
-# 3. 依赖
+# 2. 依赖
 echo "==> npm install"
-npm ci || npm install
+npm install
 
-# 4. 构建前端
+# 3. 构建前端
 echo "==> 构建前端"
 npm run build
 
-# 5. 启动（有 pm2 用 pm2，否则 nohup 后台）
+# 4. 启动（有 pm2 用 pm2，否则 nohup 后台）
 echo "==> 启动服务"
 if command -v pm2 >/dev/null 2>&1; then
   pm2 delete tugofwar >/dev/null 2>&1 || true
