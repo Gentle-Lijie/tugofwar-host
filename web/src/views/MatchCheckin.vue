@@ -3,7 +3,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NModal } from 'naive-ui';
-import { api } from '../api.js';
+import { api, download } from '../api.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -109,6 +109,14 @@ async function setCalling() {
   }
 }
 
+async function exportCheckin() {
+  try {
+    await download(`/export/checkins?match=${matchId.value}`, '签到记录.xlsx');
+  } catch (e) {
+    showToast(e.message, true);
+  }
+}
+
 onMounted(() => {
   load();
   loadNeighbors();
@@ -129,6 +137,7 @@ onUnmounted(() => clearInterval(timer));
     <div class="row" style="justify-content: center; margin-bottom: 16px">
       <n-button type="primary" @click="setCalling">📢 大屏叫号</n-button>
       <n-button type="error" secondary @click="resetAll">全部重置</n-button>
+      <n-button secondary @click="exportCheckin">⬇ 导出本场</n-button>
     </div>
 
     <table class="checkin-table">

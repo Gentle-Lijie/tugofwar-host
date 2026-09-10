@@ -8,6 +8,7 @@ const stageId = ref(null);
 const matches = ref([]);
 const loading = ref(false);
 const exporting = ref(false);
+const exportingCheckins = ref(false);
 const toast = ref(null);
 
 function showToast(msg, isError = false) {
@@ -52,6 +53,19 @@ async function exportStage() {
     showToast(e.message, true);
   } finally {
     exporting.value = false;
+  }
+}
+
+async function exportCheckins() {
+  if (stageId.value === null) return;
+  exportingCheckins.value = true;
+  const stage = stages.value.find((s) => s.id === stageId.value);
+  try {
+    await download(`/export/checkins?stage=${stageId.value}`, `${stage?.name || '赛段'}-签到记录.xlsx`);
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    exportingCheckins.value = false;
   }
 }
 
@@ -104,6 +118,9 @@ onMounted(() => load().catch((e) => showToast(e.message, true)));
       />
       <n-button size="small" type="primary" :disabled="stageId === null || exporting" @click="exportStage">
         {{ exporting ? '导出中…' : '⬇ 导出 Excel' }}
+      </n-button>
+      <n-button size="small" :disabled="stageId === null || exportingCheckins" @click="exportCheckins">
+        {{ exportingCheckins ? '导出中…' : '⬇ 导出签到' }}
       </n-button>
     </div>
   </div>

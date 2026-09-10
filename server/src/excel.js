@@ -237,3 +237,37 @@ export async function buildStageExport(stageName, matches) {
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
+
+// ---------- 签到导出 ----------
+
+/**
+ * 生成签到记录 xlsx。rows: [{stageName, sort, team, playerName, studentNo, present}]
+ * 返回 Buffer。
+ */
+export async function buildCheckinExport(rows) {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('签到记录');
+  ws.columns = [
+    { header: '赛段', key: 'stageName', width: 16 },
+    { header: '场次', key: 'sort', width: 8 },
+    { header: '队伍', key: 'team', width: 22 },
+    { header: '姓名', key: 'playerName', width: 12 },
+    { header: '学号', key: 'studentNo', width: 14 },
+    { header: '签到状态', key: 'status', width: 10 },
+  ];
+  for (const r of rows) {
+    ws.addRow({
+      stageName: r.stageName,
+      sort: r.sort,
+      team: r.team,
+      playerName: r.playerName,
+      studentNo: r.studentNo,
+      status: r.present ? '已签到' : '未签到',
+    });
+  }
+  // 表头加粗、冻结首行
+  ws.getRow(1).font = { bold: true };
+  ws.views = [{ state: 'frozen', ySplit: 1 }];
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
