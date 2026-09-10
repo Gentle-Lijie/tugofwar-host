@@ -32,7 +32,7 @@ async function load() {
     if (!scrolledOnce) {
       scrolledOnce = true;
       await nextTick();
-      document.querySelector('.highlight')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.querySelector('.match.in-progress')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   } catch {
     /* 网络抖动时保持上一帧 */
@@ -64,10 +64,20 @@ const showCalling = computed(
   () => state.value?.calling && callingMatch.value
 );
 
+// 进行中：最后一场已出结果的比赛的下一场（上一场填完结果后自动推进）
+const inProgressId = computed(() => {
+  const list = state.value?.matches ?? [];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const w = list[i].winnerSide;
+    if (w === 0 || w === 1) return list[i + 1]?.id ?? null;
+  }
+  return null;
+});
+
 // 列表中每场的状态
 function statusOf(m) {
   if (m.winnerSide === 0 || m.winnerSide === 1) return 'completed';
-  if (state.value?.currentMatch?.id === m.id) return 'in-progress';
+  if (m.id === inProgressId.value) return 'in-progress';
   return 'pending';
 }
 
